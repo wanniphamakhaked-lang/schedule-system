@@ -1,0 +1,1437 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>:root{color-scheme:light dark}body{margin:0;font:14px system-ui}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>ระบบตารางงานและการใช้รถส่วนกลาง</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@500;600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Sarabun:wght@400;700&display=swap">
+<style>
+  :root{
+    --paper:#fbeff5;
+    --surface:#ffffff;
+    --surface-2:#fdf5f9;
+    --ink:#2b2140;
+    --muted:#87799c;
+    --line:#f0dde8;
+    --line-soft:#f7ecf2;
+    --accent:#e8407f;
+    --accent-ink:#c22a66;
+    --accent-soft:#fde2ee;
+    --on-accent:#ffffff;
+    --grad:linear-gradient(135deg,#f2559a 0%,#e0357f 100%);
+    --plan:#7b5cf0;
+    --doing:#f08a2c;
+    --done:#1eab6d;
+    --blocked:#ef4b6b;
+    --shadow:0 1px 2px rgba(72,32,58,.05), 0 10px 28px -18px rgba(120,40,90,.45);
+    --radius:14px;
+    --f-display:"Bai Jamjuree","IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+    --f-body:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,-apple-system,sans-serif;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#161029; --surface:#1e1734; --surface-2:#261e40;
+      --ink:#f1eafa; --muted:#a99cc4; --line:#382c58; --line-soft:#2e2549;
+      --accent:#ff5f9e; --accent-ink:#ffa9c9; --accent-soft:#3d1f3d; --on-accent:#2a0d1c;
+      --grad:linear-gradient(135deg,#ff6ba6 0%,#e8407f 100%);
+      --plan:#9b86ff; --doing:#ffab5e; --done:#3fd694; --blocked:#ff7a8f;
+      --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 30px -18px rgba(0,0,0,.95);
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#161029; --surface:#1e1734; --surface-2:#261e40;
+    --ink:#f1eafa; --muted:#a99cc4; --line:#382c58; --line-soft:#2e2549;
+    --accent:#ff5f9e; --accent-ink:#ffa9c9; --accent-soft:#3d1f3d; --on-accent:#2a0d1c;
+    --grad:linear-gradient(135deg,#ff6ba6 0%,#e8407f 100%);
+    --plan:#9b86ff; --doing:#ffab5e; --done:#3fd694; --blocked:#ff7a8f;
+    --shadow:0 1px 2px rgba(0,0,0,.45), 0 12px 30px -18px rgba(0,0,0,.95);
+  }
+
+  *{box-sizing:border-box}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:var(--f-body); font-size:15px; line-height:1.55;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1360px; margin:0 auto; padding:28px 20px 64px}
+
+  header.top{display:flex; flex-wrap:wrap; gap:18px; align-items:flex-end; justify-content:space-between; margin-bottom:16px}
+  .brand h1{font-family:var(--f-display); font-weight:700; font-size:27px; line-height:1.2; margin:0; letter-spacing:-.01em; text-wrap:balance}
+  .brand p{margin:4px 0 0; color:var(--muted); font-size:13.5px}
+  .eyebrow{font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--accent); font-weight:600; margin:0 0 2px}
+  .toolbar{display:flex; gap:8px; align-items:center; flex-wrap:wrap}
+  .userchip{
+    display:inline-flex; align-items:center; gap:4px; flex-wrap:wrap;
+    background:var(--surface); border:1px solid var(--line); border-radius:10px; padding:3px 6px 3px 12px;
+    font-size:13px; color:var(--muted);
+  }
+  input[type=password]{
+    font-family:inherit; font-size:14px; color:var(--ink); background:var(--surface-2);
+    border:1px solid var(--line); border-radius:8px; padding:8px 10px; width:100%;
+  }
+  body.readonly .cell{cursor:default}
+  body.readonly .add-hint{display:none}
+
+  button{font-family:inherit; font-size:14px; color:inherit}
+  .btn{
+    display:inline-flex; align-items:center; gap:6px;
+    background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    padding:7px 12px; cursor:pointer; transition:border-color .15s, background .15s;
+  }
+  .btn:hover{border-color:var(--accent); background:var(--surface-2)}
+  .btn.primary{background:var(--grad); border-color:transparent; color:var(--on-accent); font-weight:600}
+  .btn.primary:hover{filter:brightness(1.06); background:var(--grad)}
+  .btn.ghost{background:transparent; border-color:transparent; color:var(--muted); padding:6px 8px}
+  .btn.ghost:hover{color:var(--ink); background:var(--surface-2); border-color:var(--line-soft)}
+  .btn.icon{padding:7px 10px; font-size:15px; line-height:1}
+  .btn[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink)}
+  .btn:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible,
+  .cell:focus-visible, .entry:focus-visible, .tab:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+
+  .tabs{display:flex; gap:2px; border-bottom:1px solid var(--line); margin-bottom:14px; flex-wrap:wrap}
+  .tab{
+    background:transparent; border:1px solid transparent; border-bottom:none; cursor:pointer;
+    padding:9px 16px; border-radius:9px 9px 0 0; color:var(--muted);
+    font-family:var(--f-display); font-weight:600; font-size:14.5px; margin-bottom:-1px;
+  }
+  .tab:hover{color:var(--ink)}
+  .tab[aria-selected="true"]{background:var(--surface); border-color:var(--line); border-bottom:1px solid var(--surface); color:var(--accent-ink); box-shadow:inset 0 3px 0 var(--accent)}
+  .tab .count{font-family:var(--f-body); font-weight:500; font-size:12px; color:var(--muted); font-variant-numeric:tabular-nums}
+
+  .monthbar{
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:10px 12px; margin-bottom:14px; box-shadow:var(--shadow);
+  }
+  .monthnav{display:flex; align-items:center; gap:8px}
+  .monthlabel{font-family:var(--f-display); font-weight:600; font-size:17px; min-width:190px; text-align:center}
+  .monthsub{color:var(--muted); font-size:12.5px; font-weight:500; text-align:center; font-variant-numeric:tabular-nums}
+  .legend{display:flex; gap:14px; flex-wrap:wrap; align-items:center; color:var(--muted); font-size:12.5px}
+  .legend span{display:inline-flex; align-items:center; gap:5px}
+  .dot{width:8px; height:8px; border-radius:50%; display:inline-block}
+  .sync{font-size:12.5px; color:var(--muted)}
+
+  .board{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); box-shadow:var(--shadow); overflow-x:auto}
+  .grid{display:grid}
+  .head{
+    position:sticky; top:0; z-index:3; background:var(--surface-2);
+    border-bottom:1px solid var(--line); padding:10px 12px;
+  }
+  .head .dow{font-family:var(--f-display); font-weight:600; font-size:13.5px}
+  .head .date{color:var(--muted); font-size:11.5px; font-variant-numeric:tabular-nums; display:flex; align-items:center; gap:5px}
+  .head.corner{position:sticky; left:0; top:0; z-index:5; border-inline-end:1px solid var(--line)}
+
+  .daycell{
+    position:sticky; left:0; z-index:2; background:var(--surface-2);
+    border-inline-end:1px solid var(--line); border-bottom:1px solid var(--line-soft);
+    padding:9px 12px; display:flex; align-items:baseline; gap:8px;
+  }
+  .daycell .num{font-family:var(--f-display); font-weight:700; font-size:16px; font-variant-numeric:tabular-nums; min-width:22px}
+  .daycell .dw{color:var(--muted); font-size:12.5px}
+  .daycell.weekend .num,.daycell.weekend .dw{color:var(--muted)}
+  .daycell.today{background:var(--accent-soft)}
+  .daycell.today .num,.daycell.today .dw{color:var(--accent-ink)}
+
+  .cell{
+    border-bottom:1px solid var(--line-soft); border-inline-end:1px solid var(--line-soft);
+    padding:7px; min-height:62px; display:flex; flex-direction:column; gap:5px;
+    background:transparent; cursor:pointer; text-align:start; width:100%;
+  }
+  .cell:hover{background:var(--surface-2)}
+  .cell.weekend{background:color-mix(in srgb, var(--surface-2) 55%, transparent)}
+  .cell.today{box-shadow:inset 0 -2px 0 var(--accent-soft)}
+  .add-hint{color:var(--muted); font-size:12px; opacity:0; transition:opacity .12s}
+  .cell:hover .add-hint{opacity:1}
+
+  .entry{
+    display:block; width:100%; text-align:start; cursor:pointer;
+    background:var(--surface); border:1px solid var(--line-soft);
+    border-inline-start:3px solid var(--member, var(--plan));
+    border-radius:7px; padding:6px 8px; font-family:inherit; font-size:12.5px; color:inherit;
+  }
+  .entry:hover{border-color:var(--line)}
+  .entry.sample{border-style:dashed}
+  .entry .t{font-weight:600; line-height:1.35; overflow-wrap:anywhere}
+  .entry .meta{display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-top:3px; color:var(--muted); font-size:11px}
+  .entry .who{display:inline-flex; align-items:center; gap:4px}
+  .entry .hrs{font-variant-numeric:tabular-nums}
+  .logrow{
+    display:block; margin-top:4px; padding-top:4px; border-top:1px dashed var(--line-soft);
+    color:var(--done); font-size:11px; font-variant-numeric:tabular-nums;
+  }
+  .m-note.logrow{border-top:none; padding-top:0; font-size:12.5px}
+  .loglabel{
+    margin:0; font-family:var(--f-display); font-weight:600; font-size:14px;
+    display:flex; align-items:baseline; gap:8px; flex-wrap:wrap;
+  }
+  .loglabel span{font-family:var(--f-body); font-weight:400; font-size:12px; color:var(--muted)}
+  .chip{display:inline-flex; align-items:center; font-size:10.5px; font-weight:600; padding:1px 6px; border-radius:999px; border:1px solid currentColor}
+  .chip.plan,.chip.tentative,.chip.req{color:var(--plan)}
+  .chip.doing,.chip.postponed,.chip.out{color:var(--doing)}
+  .chip.done,.chip.confirmed,.chip.approved{color:var(--done)}
+  .chip.blocked,.chip.cancel{color:var(--blocked)}
+  .entry.done .t,.entry.cancel .t{text-decoration:line-through; text-decoration-thickness:1px; color:var(--muted)}
+
+  /* director agenda */
+  .agenda-wrap{min-width:840px}
+  .agenda-head{
+    display:grid; grid-template-columns:112px minmax(200px,2.2fr) 1.3fr 1fr 118px; gap:12px;
+    padding:9px 14px; background:var(--surface-2); border-bottom:1px solid var(--line);
+    font-size:11.5px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted); font-weight:600;
+    position:sticky; top:0; z-index:2;
+  }
+  .veh-banner{
+    display:flex; align-items:baseline; gap:12px; flex-wrap:wrap;
+    padding:11px 14px; border-bottom:1px solid var(--line); background:var(--accent-soft);
+  }
+  .veh-banner .vb-name{font-family:var(--f-display); font-weight:600; font-size:15px; color:var(--accent-ink); display:inline-flex; align-items:center; gap:7px}
+  .veh-banner .vb-meta{color:var(--muted); font-size:12.5px}
+  .day-block{border-bottom:1px solid var(--line-soft)}
+  .day-block:last-child{border-bottom:none}
+  .day-head{display:flex; align-items:baseline; gap:10px; padding:9px 14px; background:var(--surface-2); border-bottom:1px solid var(--line-soft)}
+  .day-head .d{font-family:var(--f-display); font-weight:600; font-size:14.5px}
+  .day-head .dd{color:var(--muted); font-size:12.5px; font-variant-numeric:tabular-nums}
+  .day-head.today{background:var(--accent-soft)}
+  .day-head.today .d{color:var(--accent-ink)}
+  .day-head.weekend .d{color:var(--muted)}
+  .day-head .spacer{flex:1}
+  .mission{
+    display:grid; grid-template-columns:112px minmax(200px,2.2fr) 1.3fr 1fr 118px; gap:12px;
+    padding:10px 14px; width:100%; text-align:start; cursor:pointer;
+    background:transparent; border:none; border-bottom:1px dashed var(--line-soft);
+    font-family:inherit; font-size:13.5px; color:inherit; align-items:start;
+  }
+  .mission:hover{background:var(--surface-2)}
+  .mission:last-of-type{border-bottom:none}
+  .mission .m-time{font-variant-numeric:tabular-nums; font-weight:600; color:var(--accent-ink)}
+  .mission .m-title{font-weight:600; overflow-wrap:anywhere}
+  .mission .m-note{color:var(--muted); font-size:12.5px; margin-top:2px; overflow-wrap:anywhere; display:block}
+  .mission .m-sub{color:var(--muted); font-size:12.5px; overflow-wrap:anywhere}
+  .mission .m-label{display:none}
+  .empty-day{padding:7px 14px; color:var(--muted); font-size:12.5px}
+  .daylog{
+    display:flex; flex-wrap:wrap; gap:6px 14px; align-items:baseline;
+    padding:8px 14px; font-size:12.5px; color:var(--muted);
+    background:color-mix(in srgb, var(--done) 8%, transparent);
+    border-bottom:1px dashed var(--line-soft); font-variant-numeric:tabular-nums;
+  }
+  .daylog .tag{
+    font-family:var(--f-display); font-weight:600; font-size:11px; letter-spacing:.04em;
+    color:var(--done); border:1px solid currentColor; border-radius:999px; padding:0 7px;
+  }
+  .daylog .dl-note{flex-basis:100%; color:var(--muted)}
+
+  .summary{display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:16px}
+  .who-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:12px 14px; display:flex; flex-direction:column; gap:6px}
+  .who-card .n{display:flex; align-items:center; gap:7px; font-family:var(--f-display); font-weight:600}
+  .who-card .bar{height:7px; border-radius:4px; background:var(--line-soft); overflow:hidden}
+  .who-card .bar i{display:block; height:100%; border-radius:3px}
+  .who-card .num{color:var(--muted); font-size:12.5px; font-variant-numeric:tabular-nums}
+  .swatch{width:10px; height:10px; border-radius:3px; flex:none}
+
+  .scrim{position:fixed; inset:0; background:rgba(12,20,26,.42); display:flex; justify-content:flex-end; z-index:40}
+  .scrim[hidden]{display:none}
+  .drawer{
+    background:var(--surface); width:min(440px,100%); height:100%; overflow-y:auto;
+    border-inline-start:1px solid var(--line); padding:20px 20px 44px; display:flex; flex-direction:column; gap:14px;
+  }
+  .drawer h2{font-family:var(--f-display); font-size:18px; margin:0}
+  .drawer .sub{color:var(--muted); font-size:13px; margin:-10px 0 0}
+  .field{display:flex; flex-direction:column; gap:5px}
+  .field label{font-size:12px; font-weight:600; letter-spacing:.03em; color:var(--muted)}
+  input[type=text], select, textarea{
+    font-family:inherit; font-size:14px; color:var(--ink); background:var(--surface-2);
+    border:1px solid var(--line); border-radius:8px; padding:8px 10px; width:100%;
+  }
+  textarea{min-height:70px; resize:vertical}
+  .row2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+  .segs{display:flex; gap:6px; flex-wrap:wrap}
+  .seg{border:1px solid var(--line); background:var(--surface-2); border-radius:999px; padding:5px 11px; font-size:12.5px; cursor:pointer}
+  .seg[aria-pressed="true"]{background:var(--accent-soft); border-color:var(--accent); color:var(--accent-ink); font-weight:600}
+  .drawer-actions{display:flex; gap:8px; margin-top:4px}
+  .drawer-actions .grow{flex:1}
+  .danger{color:var(--blocked); border-color:color-mix(in srgb, var(--blocked) 40%, var(--line))}
+  .list{display:flex; flex-direction:column; gap:8px}
+  .list-row{display:flex; gap:8px; align-items:center}
+  .list-row input[type=color]{width:34px; height:34px; padding:2px; border:1px solid var(--line); border-radius:8px; background:var(--surface-2)}
+  hr.sep{border:0; border-top:1px solid var(--line-soft); margin:4px 0}
+  .note{color:var(--muted); font-size:12px; margin:0}
+
+  /* ---------- ใบขออนุญาตใช้รถ (พิมพ์) ---------- */
+  .form-sheet{display:none}
+  .form-sheet .sheet{
+    font-family:"TH SarabunPSK","TH Sarabun New","THSarabunNew","Sarabun",serif; font-size:16pt; line-height:1.6; color:#000;
+  }
+  .form-sheet .reserve{height:3cm}
+  .form-sheet .org{text-align:center; font-weight:700; font-size:18pt; line-height:1.35}
+  .form-sheet .org .unit{font-weight:400; font-size:16pt}
+  .form-sheet .topline{display:flex; justify-content:space-between; align-items:baseline; margin-top:6pt}
+  .form-sheet .docno{font-size:16pt}
+  .form-sheet .code{text-align:right; font-size:16pt}
+  .form-sheet .title{text-align:center; font-weight:700; font-size:18pt; margin-top:6pt}
+  .form-sheet .datetop{text-align:center; margin-top:2pt}
+  .form-sheet .body{margin-top:16pt}
+  .form-sheet p{margin:0 0 10pt}
+  .form-sheet .indent{text-indent:2.5cm}
+  .fill{
+    display:inline-block; border-bottom:1px dotted #000; min-width:2cm;
+    text-align:center; padding:0 4px; line-height:1.35;
+  }
+  .fill.grow{min-width:4.4cm}
+  .fill.wide{min-width:5.6cm}
+  .form-sheet .signblock{margin-top:26pt; margin-inline-start:6.4cm}
+  .form-sheet .srow{display:flex; align-items:flex-end; gap:8px; margin-bottom:16pt}
+  .form-sheet .srow .fill{min-width:5.4cm; flex:none}
+  .form-sheet .role{white-space:nowrap}
+  .form-sheet .subrole{margin-inline-start:5.6cm; margin-bottom:16pt}
+  .form-sheet .approve{margin-top:34pt}
+  .form-sheet .approve .rule{border-bottom:1px dotted #000; height:1.2em; margin-bottom:6pt}
+  .form-sheet .approve .dates{text-align:end; margin-top:16pt}
+  .form-sheet .logsheet{font-size:14pt}
+  .form-sheet .loghead{text-align:center; font-weight:700; font-size:18pt}
+  .form-sheet .logsub{text-align:center; margin-top:2pt; font-size:15pt}
+  .form-sheet .logmeta{display:flex; flex-wrap:wrap; gap:4pt 18pt; margin:10pt 0 8pt; font-size:15pt}
+  .form-sheet table{width:100%; border-collapse:collapse; margin-top:6pt}
+  .form-sheet th, .form-sheet td{
+    border:1px solid #000; padding:3pt 4pt; font-size:13.5pt; vertical-align:top;
+  }
+  .form-sheet th{text-align:center; font-weight:700}
+  .form-sheet td.c{text-align:center; font-variant-numeric:tabular-nums}
+  .form-sheet td.r{text-align:right; font-variant-numeric:tabular-nums}
+  .form-sheet tfoot td{font-weight:700}
+  .form-sheet .signrow{display:flex; justify-content:space-around; gap:1cm; margin-top:28pt; text-align:center}
+  .form-sheet .signrow div{flex:1}
+  .form-sheet .signrow .ln{border-bottom:1px dotted #000; height:1.4em; margin-bottom:6pt}
+  @page{margin:1.5cm}
+  @media print{
+    body.printing-form .wrap, body.printing-form .scrim{display:none !important}
+    body.printing-form .form-sheet{display:block}
+    body.printing-form{background:#fff}
+    .form-sheet .sheet{padding:2.5cm 2cm 2cm 3cm}
+  }
+  footer.foot{margin-top:22px; color:var(--muted); font-size:12.5px; display:flex; justify-content:space-between; gap:12px; flex-wrap:wrap}
+
+  @media (max-width:700px){
+    .wrap{padding:18px 12px 48px}
+    .brand h1{font-size:22px}
+    .agenda-wrap{min-width:0}
+    .agenda-head{display:none}
+    .mission{grid-template-columns:1fr; gap:3px; padding:12px 14px}
+    .mission .m-label{display:block; font-size:11px; letter-spacing:.05em; text-transform:uppercase; color:var(--muted); font-weight:600}
+  }
+  @media print{
+    body{background:#fff}
+    .toolbar,.monthnav .btn,.add-hint,.sync,footer.foot,.tabs{display:none !important}
+    .board{box-shadow:none; border-color:#999}
+    .grid,.agenda-wrap{min-width:0}
+    .day-block,.cell,.daycell{break-inside:avoid}
+  }
+  @media (prefers-reduced-motion: reduce){*{transition:none !important; animation:none !important}}
+</style>
+
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <p class="eyebrow" id="eyebrow">ตารางการทำงานของทีม</p>
+      <h1 id="page-title">ตารางงานทีมรายเดือน</h1>
+      <p id="page-sub">คลิกช่องว่างเพื่อเพิ่มงาน • คลิกงานเดิมเพื่อแก้ไขรายละเอียด</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="btn-weekend" type="button" aria-pressed="false">ซ่อน ส.–อา.</button>
+      <button class="btn" id="btn-logbook" type="button" hidden>สมุดบันทึกการใช้รถ (แบบ ๔)</button>
+      <button class="btn" id="btn-blankform" type="button" hidden>ใบขออนุญาตใช้รถ (เปล่า)</button>
+      <button class="btn" id="btn-settings" type="button">ตั้งค่า</button>
+      <button class="btn" id="btn-csv" type="button">บันทึกเป็น CSV</button>
+      <button class="btn" id="btn-print" type="button">พิมพ์</button>
+      <span class="userchip"><span id="who"></span><button class="btn ghost" id="btn-pw" type="button">รหัสผ่าน</button><button class="btn ghost" id="btn-users" type="button" hidden>ผู้ใช้</button><button class="btn ghost" id="btn-logout" type="button">ออกจากระบบ</button></span>
+    </div>
+  </header>
+
+  <div class="tabs" role="tablist">
+    <button class="tab" type="button" role="tab" data-view="team" aria-selected="true">งานทีม</button>
+    <button class="tab" type="button" role="tab" data-view="director" aria-selected="false">ตารางงานผู้อำนวยการ</button>
+    <button class="tab" type="button" role="tab" data-view="fleet" aria-selected="false">ตารางการใช้รถ / คนขับ</button>
+  </div>
+
+  <div class="monthbar">
+    <div class="monthnav">
+      <button class="btn icon" id="prev" type="button" aria-label="เดือนก่อนหน้า">‹</button>
+      <div>
+        <div class="monthlabel" id="monthlabel">—</div>
+        <div class="monthsub" id="monthsub">—</div>
+      </div>
+      <button class="btn icon" id="next" type="button" aria-label="เดือนถัดไป">›</button>
+      <button class="btn ghost" id="today" type="button">เดือนนี้</button>
+    </div>
+    <div class="legend" id="legend" aria-hidden="true"></div>
+    <div class="sync" id="sync">กำลังเชื่อมต่อ…</div>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <section class="summary" id="summary" aria-label="สรุปภาพรวมของเดือนนี้"></section>
+
+  <footer class="foot">
+    <span id="foot-note">ข้อมูลบันทึกอัตโนมัติทุกครั้งที่แก้ไข</span>
+    <span>เวลาแบบ 24 ชั่วโมง • ปี พ.ศ.</span>
+  </footer>
+</div>
+
+<div class="form-sheet" id="form-sheet" aria-hidden="true"></div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drawer-title"></div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DOW  = ["จันทร์","อังคาร","พุธ","พฤหัสบดี","ศุกร์","เสาร์","อาทิตย์"];
+  var DOWS = ["จ.","อ.","พ.","พฤ.","ศ.","ส.","อา."];
+  var MON  = ["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+  var MONF = ["มกราคม","กุมภาพันธ์","มีนาคม","เมษายน","พฤษภาคม","มิถุนายน","กรกฎาคม","สิงหาคม","กันยายน","ตุลาคม","พฤศจิกายน","ธันวาคม"];
+  var STATUS = {
+    team:[{id:"plan",label:"วางแผน"},{id:"doing",label:"กำลังทำ"},{id:"done",label:"เสร็จแล้ว"},{id:"blocked",label:"ติดปัญหา"}],
+    director:[{id:"confirmed",label:"ยืนยันแล้ว"},{id:"tentative",label:"รอยืนยัน"},{id:"postponed",label:"เลื่อน"},{id:"cancel",label:"ยกเลิก"}],
+    fleet:[{id:"req",label:"ขอใช้"},{id:"approved",label:"อนุมัติแล้ว"},{id:"out",label:"กำลังใช้งาน"},{id:"done",label:"เสร็จสิ้น"},{id:"cancel",label:"ยกเลิก"}]
+  };
+  var DEFAULT_CONFIG = {
+    director:{name:"ผู้อำนวยการ", position:"ผู้อำนวยการสำนักงาน"},
+    letterhead:{org:"", unit:"", docno:"", reserve:false},
+    members:[
+      {id:"m1", name:"ณิชา",   color:"#e8407f"},
+      {id:"m2", name:"ธนกฤต",  color:"#7b5cf0"},
+      {id:"m3", name:"พิมพ์ชนก", color:"#29b6f6"},
+      {id:"m4", name:"อรรถพล", color:"#f7941e"}
+    ],
+    slots:[
+      {id:"s1", name:"ช่วงเช้า",    time:"09:00–12:00"},
+      {id:"s2", name:"ช่วงบ่าย",    time:"13:00–16:00"},
+      {id:"s3", name:"ช่วงเย็น",    time:"16:00–18:00"},
+      {id:"s4", name:"ประชุม/อื่นๆ", time:"ตามนัดหมาย"}
+    ],
+    vehicles:[
+      {id:"v1", name:"รถส่วนกลาง", plate:"นข 1234", driver:"สมชาย", color:"#e8407f"}
+    ]
+  };
+
+  var db=null, downloads=null, view="team";
+  var ME=null, stamps={}, pollTimer=null;
+  var config=clone(DEFAULT_CONFIG);
+  var cursor=new Date(); cursor=new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+  var data={team:{},director:{},fleet:{},fleetlog:{}};      // team/fleet "rowId|D", director "D"  (D = วันที่ 1..31)
+  var isSample={team:true,director:true,fleet:true,fleetlog:false};
+  var hideWeekend=false;
+  var unsubs=[], saveTimers={}, configTimer=null;
+  var LS="team-schedule/v3";
+  var DOC={team:"months/", director:"director/", fleet:"fleet/", fleetlog:"fleetlog/"};
+
+  function clone(o){ return JSON.parse(JSON.stringify(o)); }
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){
+    return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function uid(){ return Math.random().toString(36).slice(2,9); }
+  function daysInMonth(){ return new Date(cursor.getFullYear(), cursor.getMonth()+1, 0).getDate(); }
+  function dateOf(d){ return new Date(cursor.getFullYear(), cursor.getMonth(), d); }
+  function dowOf(d){ return (dateOf(d).getDay()+6)%7; }
+  function isWeekend(d){ return dowOf(d)>=5; }
+  function ymd(x){ return x.getFullYear()+"-"+String(x.getMonth()+1).padStart(2,"0")+"-"+String(x.getDate()).padStart(2,"0"); }
+  function isToday(d){ return ymd(dateOf(d))===ymd(new Date()); }
+  function monthKey(){ return cursor.getFullYear()+"-"+String(cursor.getMonth()+1).padStart(2,"0"); }
+  function dayList(){
+    var out=[], n=daysInMonth();
+    for(var d=1; d<=n; d++){ if(hideWeekend && isWeekend(d)) continue; out.push(d); }
+    return out;
+  }
+  function byId(list,id){ for(var i=0;i<list.length;i++) if(list[i].id===id) return list[i]; return null; }
+  function statusLabel(v,id){ var s=byId(STATUS[v],id); return s?s.label:STATUS[v][0].label; }
+  function cssStatus(id){
+    if(id==="plan"||id==="tentative"||id==="req") return "plan";
+    if(id==="doing"||id==="postponed"||id==="out") return "doing";
+    if(id==="done"||id==="confirmed"||id==="approved") return "done";
+    return "blocked";
+  }
+  function lsGet(k,f){ try{ var v=localStorage.getItem(k); return v?JSON.parse(v):f; }catch(e){ return f; } }
+  function lsSet(k,v){ try{ localStorage.setItem(k,JSON.stringify(v)); }catch(e){} }
+  function setSync(t,tone){ var el=document.getElementById("sync"); el.textContent=t; el.style.color=tone==="warn"?"var(--doing)":"var(--muted)"; }
+
+  /* ---------------- sample month ---------------- */
+  function samples(v){
+    if(v==="fleetlog") return {};
+    var m=config.members, ve=config.vehicles, n=daysInMonth();
+    function mid(i){ return (m[i]||{}).id||""; }
+    function day(x){ return String(Math.min(x,n)); }
+    if(v==="team"){
+      var o={};
+      o["s1|"+day(2)]=[{id:uid(),title:"ประชุมวางแผนประจำเดือน",member:mid(0),status:"done",time:"09:00–10:00",note:"สรุปเป้าหมายและแบ่งงาน",sample:true}];
+      o["s2|"+day(2)]=[{id:uid(),title:"ร่างข้อเสนอลูกค้า A",member:mid(2),status:"doing",time:"13:00–16:00",note:"รอตัวเลขจากฝ่ายบัญชี",sample:true}];
+      o["s1|"+day(5)]=[{id:uid(),title:"ตรวจรับงานจากผู้ผลิต",member:mid(1),status:"plan",time:"09:00–11:00",note:"",sample:true}];
+      o["s4|"+day(9)]=[{id:uid(),title:"อบรมทีมใหม่",member:mid(3),status:"plan",time:"13:30–15:00",note:"",sample:true}];
+      o["s3|"+day(16)]=[{id:uid(),title:"สรุปยอดกลางเดือน",member:mid(1),status:"plan",time:"16:00–17:00",note:"",sample:true}];
+      return o;
+    }
+    if(v==="director"){
+      var d={};
+      d[day(2)]=[
+        {id:uid(),time:"09:00–10:00",title:"ประชุมผู้บริหารประจำเดือน",place:"ห้องประชุมชั้น 3",escort:"เลขานุการ",dress:"ชุดสุภาพ",status:"confirmed",note:"เตรียมวาระ 5 เรื่อง",sample:true},
+        {id:uid(),time:"13:30–15:00",title:"ตรวจเยี่ยมหน่วยงานในพื้นที่",place:"อ.เมือง",escort:"ธนกฤต",dress:"ชุดปฏิบัติงาน",status:"confirmed",note:"ใช้รถตู้ 1",sample:true}
+      ];
+      d[day(8)]=[{id:uid(),time:"10:00–12:00",title:"ต้อนรับคณะศึกษาดูงาน",place:"ห้องโถงชั้น 1",escort:"ณิชา",dress:"ชุดสูท",status:"tentative",note:"รอยืนยันจำนวนผู้เข้าร่วม",sample:true}];
+      d[day(20)]=[{id:uid(),time:"09:00–16:00",title:"สัมมนาประจำปี",place:"โรงแรมในตัวเมือง",escort:"พิมพ์ชนก",dress:"ชุดสูท",status:"confirmed",note:"ออกเดินทาง 08:00",sample:true}];
+      return d;
+    }
+    var f={}, v1=(ve[0]||{}).id||"v1", v2=(ve[1]||{}).id||v1, v3=(ve[2]||{}).id||v1;
+    f[v2+"|"+day(2)]=[{id:uid(),time:"08:00–10:30",dest:"สำนักงานเขต",requester:"ผู้อำนวยการ",people:"2",purpose:"ประชุมผู้บริหาร",status:"done",note:"",sample:true}];
+    f[v1+"|"+day(5)]=[{id:uid(),time:"08:30–12:00",dest:"ศาลากลางจังหวัด",requester:"ฝ่ายแผนงาน",people:"4",purpose:"ส่งเอกสารและประชุม",status:"approved",note:"",sample:true}];
+    f[v3+"|"+day(9)]=[{id:uid(),time:"13:00–16:00",dest:"คลังพัสดุ",requester:"ฝ่ายพัสดุ",people:"2",purpose:"ขนย้ายครุภัณฑ์",status:"req",note:"รออนุมัติ",sample:true}];
+    f[v2+"|"+day(20)]=[{id:uid(),time:"07:30–17:00",dest:"โรงแรมในตัวเมือง",requester:"ผู้อำนวยการ",people:"3",purpose:"สัมมนาประจำปี",status:"approved",note:"เติมน้ำมันก่อนออก",sample:true}];
+    return f;
+  }
+
+  /* ---------------- persistence ---------------- */
+  function api(url, opts){
+    opts = opts || {};
+    opts.credentials = "same-origin";
+    if(opts.body && typeof opts.body !== "string"){
+      opts.headers = Object.assign({"Content-Type":"application/json"}, opts.headers||{});
+      opts.body = JSON.stringify(opts.body);
+    }
+    return fetch(url, opts).then(function(r){
+      if(r.status===401){ location.href="/login.html"; throw new Error("unauthorized"); }
+      if(!r.ok) return r.json().catch(function(){ return {error:"เกิดข้อผิดพลาด"}; }).then(function(j){ throw new Error(j.error||"error"); });
+      return r.json();
+    });
+  }
+  function readonly(){ return !ME || ME.role==="viewer"; }
+
+  function save(v){
+    isSample[v]=false;
+    if(readonly()){ setSync("บัญชีนี้ดูได้อย่างเดียว แก้ไขไม่ได้","warn"); return; }
+    clearTimeout(saveTimers[v]);
+    setSync("กำลังบันทึก…");
+    saveTimers[v]=setTimeout(function(){
+      api("/api/data/"+v+"/"+monthKey(), {method:"PUT", body:{cells:data[v]}})
+        .then(function(r){ setSync("บันทึกแล้ว "+timeNow()); refreshStamps(); })
+        .catch(function(e){ setSync("บันทึกไม่สำเร็จ: "+e.message,"warn"); });
+    },300);
+  }
+  function timeNow(){
+    var d=new Date();
+    return String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  }
+
+  function saveConfig(){
+    if(readonly()) return;
+    clearTimeout(configTimer);
+    configTimer=setTimeout(function(){
+      api("/api/config", {method:"PUT", body:clone(config)}).catch(function(){});
+    },400);
+  }
+
+  function loadMonth(){
+    setSync("กำลังโหลด…");
+    var mk=monthKey();
+    Promise.all(["team","director","fleet","fleetlog"].map(function(v){
+      return api("/api/data/"+v+"/"+mk).then(function(rec){ return {v:v, rec:rec}; });
+    })).then(function(list){
+      if(mk!==monthKey()) return;                 // ผู้ใช้เปลี่ยนเดือนระหว่างโหลด
+      var empty=true;
+      list.forEach(function(x){
+        var cells=(x.rec && x.rec.cells) || {};
+        if(Object.keys(cells).length) empty=false;
+        data[x.v]=cells; isSample[x.v]=false;
+      });
+      if(empty){
+        ["team","director","fleet"].forEach(function(v){ data[v]=samples(v); isSample[v]=true; });
+        data.fleetlog={};
+        setSync("เดือนนี้ยังว่าง — แสดงตัวอย่างไว้ก่อน");
+      }else{
+        setSync("ข้อมูลล่าสุด "+timeNow());
+      }
+      render();
+      refreshStamps();
+    }).catch(function(e){ setSync("โหลดข้อมูลไม่สำเร็จ: "+e.message,"warn"); });
+  }
+
+  function refreshStamps(){
+    api("/api/stamp/"+monthKey()).then(function(st){ stamps=st; }).catch(function(){});
+  }
+  function startPolling(){
+    clearInterval(pollTimer);
+    pollTimer=setInterval(function(){
+      if(!scrim.hidden) return;                   // ไม่รีเฟรชขณะกำลังกรอกข้อมูล
+      api("/api/stamp/"+monthKey()).then(function(st){
+        var changed=false;
+        Object.keys(st).forEach(function(k){ if((stamps[k]||0)!==st[k]) changed=true; });
+        if(!changed) return;
+        stamps=st;
+        api("/api/config").then(function(c){
+          if(c && c.members) config=Object.assign(config,c);
+          loadMonth();
+        }).catch(function(){ loadMonth(); });
+      }).catch(function(){});
+    }, 20000);
+  }
+
+  function stripSamples(v){
+    if(!isSample[v]) return;
+    Object.keys(data[v]).forEach(function(k){
+      data[v][k]=(data[v][k]||[]).map(function(e){ var c=clone(e); delete c.sample; return c; });
+    });
+    isSample[v]=false;
+  }
+
+  /* ---------------- render ---------------- */
+  function render(){ renderChrome(); renderBoard(); renderSummary(); }
+
+  function renderChrome(){
+    document.getElementById("monthlabel").textContent=MONF[cursor.getMonth()]+" "+(cursor.getFullYear()+543);
+    document.getElementById("monthsub").textContent=daysInMonth()+" วัน • ค.ศ. "+cursor.getFullYear();
+    var t={
+      team:["ตารางการทำงานของทีม","ตารางงานทีมรายเดือน","คลิกช่องว่างเพื่อเพิ่มงาน • คลิกงานเดิมเพื่อแก้ไขรายละเอียด"],
+      director:["ภารกิจผู้บริหาร","ตารางงาน"+(config.director.name||"ผู้อำนวยการ"),"บันทึกเวลา ภารกิจ สถานที่ ผู้ติดตาม และการแต่งกายของแต่ละวันตลอดเดือน"],
+      fleet:["งานยานพาหนะ","ตารางการใช้รถ / คนขับ","จองรถรายวัน ระบุปลายทาง ผู้ขอใช้ และสถานะการอนุมัติ"]
+    }[view];
+    document.getElementById("eyebrow").textContent=t[0];
+    document.getElementById("page-title").textContent=t[1];
+    document.getElementById("page-sub").textContent=t[2];
+    document.getElementById("legend").innerHTML=STATUS[view].map(function(s){
+      return '<span><i class="dot" style="background:var(--'+cssStatus(s.id)+')"></i>'+esc(s.label)+'</span>'; }).join("");
+    Array.prototype.forEach.call(document.querySelectorAll(".tab"), function(b){
+      var v=b.getAttribute("data-view");
+      if(!b.getAttribute("data-label")) b.setAttribute("data-label", b.textContent.trim());
+      b.setAttribute("aria-selected", String(v===view));
+      b.innerHTML=esc(b.getAttribute("data-label"))+' <span class="count">'+count(v)+'</span>';
+    });
+    document.getElementById("btn-blankform").hidden = (view!=="fleet");
+    document.getElementById("btn-logbook").hidden = (view!=="fleet");
+    document.getElementById("btn-weekend").setAttribute("aria-pressed", String(hideWeekend));
+    document.getElementById("btn-weekend").textContent = hideWeekend ? "แสดง ส.–อา." : "ซ่อน ส.–อา.";
+  }
+  function count(v){ var n=0; Object.keys(data[v]||{}).forEach(function(k){ n+=(data[v][k]||[]).length; }); return n; }
+
+  function renderBoard(){
+    var board=document.getElementById("board");
+    if(view==="director"){ board.innerHTML=agendaHTML(); return; }
+    if(view==="fleet" && config.vehicles.length===1){ board.innerHTML=fleetAgendaHTML(); return; }
+    var cols = view==="team" ? config.slots : config.vehicles;
+    var colW = view==="team" ? "minmax(190px,1fr)" : "minmax(210px,1fr)";
+    var html='<div class="grid" style="min-width:'+(150+cols.length*200)+'px; grid-template-columns:150px repeat('+cols.length+', '+colW+')">';
+    html+='<div class="head corner"><div class="dow">วันที่</div><div class="date">'+MONF[cursor.getMonth()]+'</div></div>';
+    cols.forEach(function(c){
+      if(view==="team"){
+        html+='<div class="head"><div class="dow">'+esc(c.name)+'</div><div class="date">'+esc(c.time||"")+'</div></div>';
+      }else{
+        html+='<div class="head"><div class="dow">'+esc(c.name)+'</div><div class="date">'+
+          '<i class="swatch" style="background:'+esc(c.color||"#7b5cf0")+'"></i>'+esc(c.plate||"")+
+          (c.driver?' • '+esc(c.driver):'')+'</div></div>';
+      }
+    });
+    dayList().forEach(function(d){
+      var wk=isWeekend(d), td=isToday(d);
+      html+='<div class="daycell'+(wk?" weekend":"")+(td?" today":"")+'">'+
+        '<span class="num">'+d+'</span><span class="dw">'+DOWS[dowOf(d)]+'</span></div>';
+      cols.forEach(function(c){
+        var key=c.id+"|"+d, list=data[view][key]||[];
+        html+='<div class="cell'+(wk?" weekend":"")+(td?" today":"")+'" role="button" tabindex="0" data-cell="'+key+'" '+
+          'aria-label="เพิ่มรายการ '+esc(c.name)+' วันที่ '+d+'">';
+        list.forEach(function(en){ html+=cellEntryHTML(en,key,c); });
+        html+='<span class="add-hint">+ เพิ่ม'+(view==="team"?"งาน":"การใช้รถ")+'</span></div>';
+      });
+    });
+    board.innerHTML=html+'</div>';
+  }
+
+  function cellEntryHTML(en,key,col){
+    if(view==="team"){
+      var m=byId(config.members,en.member);
+      return '<button class="entry '+esc(en.status||"plan")+(en.sample?" sample":"")+'" type="button" data-entry="'+esc(en.id)+'" data-key="'+esc(key)+'" '+
+        'style="--member:'+esc(m?m.color:"var(--plan)")+'">'+
+        '<span class="t">'+esc(en.title||"(ไม่มีชื่องาน)")+'</span><span class="meta">'+
+        (m?'<span class="who"><i class="swatch" style="background:'+esc(m.color)+'"></i>'+esc(m.name)+'</span>':'')+
+        (en.time?'<span class="hrs">'+esc(en.time)+'</span>':'')+
+        '<span class="chip '+esc(en.status||"plan")+'">'+esc(statusLabel("team",en.status))+'</span>'+
+        (en.sample?'<span class="hrs">ตัวอย่าง</span>':'')+'</span></button>';
+    }
+    return '<button class="entry '+esc(en.status||"req")+(en.sample?" sample":"")+'" type="button" data-entry="'+esc(en.id)+'" data-key="'+esc(key)+'" '+
+      'style="--member:'+esc(col.color||"var(--plan)")+'">'+
+      '<span class="t">'+esc(en.dest||"(ยังไม่ระบุปลายทาง)")+'</span><span class="meta">'+
+      (en.time?'<span class="hrs">'+esc(en.time)+'</span>':'')+
+      (en.requester?'<span class="who">'+esc(en.requester)+'</span>':'')+
+      (en.people?'<span class="hrs">'+esc(en.people)+' คน</span>':'')+
+      '<span class="chip '+esc(en.status||"req")+'">'+esc(statusLabel("fleet",en.status))+'</span>'+
+      (en.sample?'<span class="hrs">ตัวอย่าง</span>':'')+'</span>'+
+      (logLine(en)?'<span class="logrow">'+esc(logLine(en))+'</span>':'')+'</button>';
+  }
+
+  function agendaHTML(){
+    var html='<div class="agenda-wrap"><div class="agenda-head"><span>เวลา</span><span>ภารกิจ</span><span>สถานที่</span><span>ผู้ติดตาม</span><span>สถานะ</span></div>';
+    dayList().forEach(function(d){
+      var list=(data.director[String(d)]||[]).slice().sort(function(a,b){ return String(a.time||"").localeCompare(String(b.time||"")); });
+      html+='<div class="day-block"><div class="day-head'+(isToday(d)?" today":"")+(isWeekend(d)?" weekend":"")+'">'+
+        '<span class="d">'+d+' '+MON[cursor.getMonth()]+'</span><span class="dd">วัน'+DOW[dowOf(d)]+'</span>'+
+        '<span class="spacer"></span><button class="btn ghost" type="button" data-addday="'+d+'">+ เพิ่มภารกิจ</button></div>';
+      if(!list.length){ html+='<div class="empty-day">ไม่มีภารกิจ</div>'; }
+      else list.forEach(function(en){
+        html+='<button class="mission" type="button" data-mission="'+esc(en.id)+'" data-day="'+d+'">'+
+          '<span><span class="m-label">เวลา</span><span class="m-time">'+esc(en.time||"—")+'</span></span>'+
+          '<span><span class="m-title">'+esc(en.title||"(ไม่ระบุภารกิจ)")+'</span>'+
+            (en.note?'<span class="m-note">'+esc(en.note)+'</span>':'')+
+            (en.dress?'<span class="m-note">การแต่งกาย: '+esc(en.dress)+'</span>':'')+'</span>'+
+          '<span class="m-sub"><span class="m-label">สถานที่</span>'+esc(en.place||"—")+'</span>'+
+          '<span class="m-sub"><span class="m-label">ผู้ติดตาม</span>'+esc(en.escort||"—")+'</span>'+
+          '<span><span class="chip '+esc(en.status||"tentative")+'">'+esc(statusLabel("director",en.status))+'</span>'+
+            (en.sample?' <span class="m-sub">ตัวอย่าง</span>':'')+'</span></button>';
+      });
+      html+='</div>';
+    });
+    return html+'</div>';
+  }
+
+  function fleetAgendaHTML(){
+    var v=config.vehicles[0];
+    var html='<div class="agenda-wrap">'+
+      '<div class="veh-banner"><span class="vb-name"><i class="swatch" style="background:'+esc(v.color||"#7b5cf0")+'"></i>'+esc(v.name)+'</span>'+
+      '<span class="vb-meta">'+esc(v.plate||"ยังไม่ระบุทะเบียน")+' • พนักงานขับรถ '+esc(v.driver||"ยังไม่ระบุ")+'</span></div>'+
+      '<div class="agenda-head"><span>เวลาไป–กลับ</span><span>ปลายทาง / วัตถุประสงค์</span><span>ผู้ขอใช้</span><span>ผู้โดยสาร</span><span>สถานะ</span></div>';
+    dayList().forEach(function(d){
+      var key=v.id+"|"+d;
+      var list=(data.fleet[key]||[]).slice().sort(function(a,b){ return String(a.time||"").localeCompare(String(b.time||"")); });
+      html+='<div class="day-block"><div class="day-head'+(isToday(d)?" today":"")+(isWeekend(d)?" weekend":"")+'">'+
+        '<span class="d">'+d+' '+MON[cursor.getMonth()]+'</span><span class="dd">วัน'+DOW[dowOf(d)]+'</span>'+
+        '<span class="spacer"></span>'+
+        '<button class="btn ghost" type="button" data-daylog="'+d+'">'+(dayLog(d)?"แก้บันทึกประจำวัน":"ลงเวลาใช้รถ")+'</button>'+
+        '<button class="btn ghost" type="button" data-addveh="'+d+'">+ จองรถ</button></div>';
+      var lg=dayLog(d);
+      if(lg){
+        var kmv=distKm(lg);
+        html+='<div class="daylog"><span class="tag">บันทึกประจำวัน</span>'+
+          '<span>ออก '+esc(lg.outTime||"—")+' · กลับ '+esc(lg.inTime||"—")+'</span>'+
+          (lg.dest?'<span>'+esc(lg.dest)+'</span>':'')+
+          (kmv!==null?'<span>'+kmv+' กม.</span>':'')+
+          (lg.fuel?'<span>เติม '+esc(lg.fuel)+'</span>':'')+
+          (lg.driver?'<span>ผู้ขับ '+esc(lg.driver)+'</span>':'')+
+          (lg.note?'<span class="dl-note">'+esc(lg.note)+'</span>':'')+'</div>';
+      }
+      if(!list.length && !lg){ html+='<div class="empty-day">ว่าง</div>'; }
+      else list.forEach(function(en){
+        html+='<button class="mission" type="button" data-entry="'+esc(en.id)+'" data-key="'+esc(key)+'">'+
+          '<span><span class="m-label">เวลา</span><span class="m-time">'+esc(en.time||"—")+'</span></span>'+
+          '<span><span class="m-title">'+esc(en.dest||"(ยังไม่ระบุปลายทาง)")+'</span>'+
+            (en.purpose?'<span class="m-note">'+esc(en.purpose)+'</span>':'')+
+            (logLine(en)?'<span class="m-note logrow">'+esc(logLine(en))+'</span>':'')+
+            (en.note?'<span class="m-note">'+esc(en.note)+'</span>':'')+'</span>'+
+          '<span class="m-sub"><span class="m-label">ผู้ขอใช้</span>'+esc(en.requester||"—")+'</span>'+
+          '<span class="m-sub"><span class="m-label">ผู้โดยสาร</span>'+(en.people?esc(en.people)+" คน":"—")+'</span>'+
+          '<span><span class="chip '+esc(en.status||"req")+'">'+esc(statusLabel("fleet",en.status))+'</span>'+
+            (en.sample?' <span class="m-sub">ตัวอย่าง</span>':'')+'</span></button>';
+      });
+      html+='</div>';
+    });
+    return html+'</div>';
+  }
+
+  function renderSummary(){
+    var box=document.getElementById("summary"), html="", total=count(view);
+    if(view==="team"){
+      var c={}, max=1;
+      Object.keys(data.team).forEach(function(k){ (data.team[k]||[]).forEach(function(e){
+        var id=e.member||"-"; c[id]=c[id]||{all:0,done:0}; c[id].all++; if(e.status==="done") c[id].done++; }); });
+      Object.keys(c).forEach(function(k){ max=Math.max(max,c[k].all); });
+      config.members.forEach(function(m){
+        var x=c[m.id]||{all:0,done:0};
+        html+=card(m.name,m.color,x.all/max,x.all+" งานในเดือนนี้ • เสร็จแล้ว "+x.done);
+      });
+      if(c["-"]) html+=card("ยังไม่ระบุผู้รับผิดชอบ","var(--plan)",c["-"].all/max,c["-"].all+" งาน");
+      document.getElementById("foot-note").textContent="รวม "+total+" งานในเดือนนี้ • บันทึกอัตโนมัติทุกครั้งที่แก้ไข";
+    }else if(view==="director"){
+      var st={}, maxs=1;
+      Object.keys(data.director).forEach(function(k){ (data.director[k]||[]).forEach(function(e){
+        var s=e.status||"tentative"; st[s]=(st[s]||0)+1; }); });
+      STATUS.director.forEach(function(s){ maxs=Math.max(maxs, st[s.id]||0); });
+      STATUS.director.forEach(function(s){
+        html+=card(s.label,"var(--"+cssStatus(s.id)+")",(st[s.id]||0)/maxs,(st[s.id]||0)+" ภารกิจ");
+      });
+      var busiest=0, bd=0;
+      Object.keys(data.director).forEach(function(k){ var n=(data.director[k]||[]).length; if(n>busiest){ busiest=n; bd=+k; } });
+      document.getElementById("foot-note").textContent="รวม "+total+" ภารกิจในเดือนนี้"+(busiest?" • วันที่แน่นที่สุดคือ "+bd+" "+MON[cursor.getMonth()]+" ("+busiest+" ภารกิจ)":"");
+    }else{
+      var used={}, maxv=1;
+      Object.keys(data.fleet).forEach(function(k){ var vid=k.split("|")[0]; used[vid]=(used[vid]||0)+(data.fleet[k]||[]).length; });
+      Object.keys(used).forEach(function(k){ maxv=Math.max(maxv,used[k]); });
+      var km={}, totalKm=0, logged=0;
+      Object.keys(data.fleet).forEach(function(k){
+        var vid=k.split("|")[0];
+        (data.fleet[k]||[]).forEach(function(e){
+          var d=distKm(e);
+          if(d!==null){ km[vid]=(km[vid]||0)+d; totalKm+=d; logged++; }
+        });
+      });
+      config.vehicles.forEach(function(v){
+        var n=used[v.id]||0, k=Math.round((km[v.id]||0)*10)/10;
+        html+=card(v.name+" · "+(v.driver||"ยังไม่ระบุคนขับ"), v.color||"var(--plan)", n/maxv,
+          n+" เที่ยว • ระยะทาง "+k+" กม.");
+      });
+      var logDays=0, logKm=0;
+      Object.keys(data.fleetlog||{}).forEach(function(k){
+        var lg=data.fleetlog[k]; logDays++;
+        var dd=distKm(lg); if(dd!==null) logKm+=dd;
+      });
+      html+=card("ลงเวลาการใช้รถแล้ว","var(--done)", total?logged/total:0, logged+" จาก "+total+" เที่ยว • รวม "+(Math.round(totalKm*10)/10)+" กม.");
+      html+=card("บันทึกประจำวัน","var(--accent)", logDays/Math.max(daysInMonth(),1), logDays+" วันในเดือนนี้ • ระยะทาง "+(Math.round(logKm*10)/10)+" กม.");
+      document.getElementById("foot-note").textContent="รวม "+total+" เที่ยวในเดือนนี้ • ลงเวลาแล้ว "+logged+" เที่ยว • ระยะทางรวม "+(Math.round(totalKm*10)/10)+" กม.";
+    }
+    box.innerHTML=html;
+  }
+  function card(name,color,ratio,sub){
+    return '<div class="who-card"><div class="n"><i class="swatch" style="background:'+esc(color)+'"></i>'+esc(name)+'</div>'+
+      '<div class="bar"><i style="width:'+Math.round(Math.max(0,Math.min(1,ratio||0))*100)+'%; background:'+esc(color)+'"></i></div>'+
+      '<div class="num">'+esc(sub)+'</div></div>';
+  }
+
+  /* ---------------- drawer ---------------- */
+  var scrim=document.getElementById("scrim"), drawer=document.getElementById("drawer"), lastFocus=null;
+  function openDrawer(html){
+    lastFocus=document.activeElement; drawer.innerHTML=html; scrim.hidden=false;
+    var f=drawer.querySelector("input,select,textarea,button"); if(f) f.focus();
+  }
+  function closeDrawer(){ scrim.hidden=true; drawer.innerHTML=""; if(lastFocus&&lastFocus.focus) lastFocus.focus(); }
+  scrim.addEventListener("click", function(e){ if(e.target===scrim) closeDrawer(); });
+  document.addEventListener("keydown", function(e){ if(e.key==="Escape" && !scrim.hidden) closeDrawer(); });
+
+  function fieldText(id,label,val,ph){
+    return '<div class="field"><label for="'+id+'">'+label+'</label><input type="text" id="'+id+'" value="'+esc(val||"")+'" placeholder="'+esc(ph||"")+'"></div>';
+  }
+  function statusSegs(v,cur){
+    return '<div class="field"><label>สถานะ</label><div class="segs" id="f-status">'+STATUS[v].map(function(s){
+      return '<button class="seg" type="button" data-status="'+s.id+'" aria-pressed="'+(s.id===cur)+'">'+s.label+'</button>'; }).join("")+'</div></div>';
+  }
+  function wireStatus(cb){
+    drawer.querySelector("#f-status").addEventListener("click", function(e){
+      var b=e.target.closest("[data-status]"); if(!b) return;
+      cb(b.getAttribute("data-status"));
+      Array.prototype.forEach.call(drawer.querySelectorAll("[data-status]"), function(x){ x.setAttribute("aria-pressed",String(x===b)); });
+    });
+  }
+  function dayLabel(d){ return "วัน"+DOW[dowOf(d)]+"ที่ "+d+" "+MONF[cursor.getMonth()]+" "+(cursor.getFullYear()+543); }
+  function actions(isNew){
+    return '<div class="drawer-actions"><button class="btn primary grow" type="button" id="f-save">บันทึก</button>'+
+      '<button class="btn" type="button" id="f-cancel">ยกเลิก</button>'+
+      (isNew?"":'<button class="btn danger" type="button" id="f-del">ลบ</button>')+'</div>';
+  }
+  function val(id){ var el=drawer.querySelector("#"+id); return el?el.value.trim():""; }
+  function bind(isNew,onSave,onDelete){
+    drawer.querySelector("#f-cancel").addEventListener("click", closeDrawer);
+    drawer.querySelector("#f-save").addEventListener("click", function(){ var ok=onSave(); if(ok!==false) render(); closeDrawer(); });
+    if(!isNew) drawer.querySelector("#f-del").addEventListener("click", function(){ onDelete(); render(); closeDrawer(); });
+  }
+
+  function openTeam(key,entryId){
+    if(readonly()) return;
+    var parts=key.split("|"), d=+parts[1];
+    var list=data.team[key]||[], en=byId(list,entryId), isNew=!en;
+    if(isNew) en={id:uid(),title:"",member:"",status:"plan",time:"",note:""};
+    var opts='<option value="">— ยังไม่ระบุ —</option>'+config.members.map(function(m){
+      return '<option value="'+esc(m.id)+'"'+(m.id===en.member?" selected":"")+'>'+esc(m.name)+'</option>'; }).join("");
+    var slot=byId(config.slots,parts[0]);
+    openDrawer(
+      '<h2 id="drawer-title">'+(isNew?"เพิ่มงาน":"แก้ไขงาน")+'</h2>'+
+      '<p class="sub">'+dayLabel(d)+' • '+esc(slot?slot.name:"")+'</p>'+
+      fieldText("f-title","ชื่องาน",en.title,"เช่น ตรวจสอบสต๊อกสินค้า")+
+      '<div class="row2"><div class="field"><label for="f-member">ผู้รับผิดชอบ</label><select id="f-member">'+opts+'</select></div>'+
+      fieldText("f-time","เวลา",en.time,"09:00–10:30")+'</div>'+
+      statusSegs("team",en.status)+
+      '<div class="field"><label for="f-note">รายละเอียด / หมายเหตุ</label><textarea id="f-note" placeholder="สิ่งที่ต้องเตรียม อุปกรณ์ สถานที่ ผู้เกี่ยวข้อง…">'+esc(en.note)+'</textarea></div>'+
+      actions(isNew)
+    );
+    var status=en.status; wireStatus(function(s){ status=s; });
+    bind(isNew, function(){
+      en.title=val("f-title"); en.member=val("f-member"); en.time=val("f-time"); en.note=val("f-note"); en.status=status;
+      delete en.sample;
+      if(!en.title && !en.note) return false;
+      data.team[key]=data.team[key]||[]; if(isNew) data.team[key].push(en);
+      stripSamples("team"); save("team"); return true;
+    }, function(){
+      data.team[key]=(data.team[key]||[]).filter(function(x){ return x.id!==entryId; });
+      if(!data.team[key].length) delete data.team[key];
+      stripSamples("team"); save("team");
+    });
+  }
+
+  function openDirector(d,entryId){
+    if(readonly()) return;
+    var k=String(d), list=data.director[k]||[], en=byId(list,entryId), isNew=!en;
+    if(isNew) en={id:uid(),time:"",title:"",place:"",escort:"",dress:"",status:"confirmed",note:""};
+    openDrawer(
+      '<h2 id="drawer-title">'+(isNew?"เพิ่มภารกิจ":"แก้ไขภารกิจ")+'</h2>'+
+      '<p class="sub">'+dayLabel(d)+' • '+esc(config.director.name||"ผู้อำนวยการ")+'</p>'+
+      fieldText("f-title","ภารกิจ",en.title,"เช่น ประชุมผู้บริหารประจำเดือน")+
+      '<div class="row2">'+fieldText("f-time","เวลา",en.time,"09:00–10:00")+fieldText("f-dress","การแต่งกาย",en.dress,"ชุดสุภาพ / ชุดสูท")+'</div>'+
+      fieldText("f-place","สถานที่",en.place,"เช่น ห้องประชุมชั้น 3")+
+      fieldText("f-escort","ผู้ติดตาม / ผู้ประสานงาน",en.escort,"เช่น เลขานุการ")+
+      statusSegs("director",en.status)+
+      '<div class="field"><label for="f-note">รายละเอียด / เอกสารที่ต้องเตรียม</label><textarea id="f-note" placeholder="วาระการประชุม เอกสาร ผู้เข้าร่วม รถที่ใช้…">'+esc(en.note)+'</textarea></div>'+
+      actions(isNew)
+    );
+    var status=en.status; wireStatus(function(s){ status=s; });
+    bind(isNew, function(){
+      en.title=val("f-title"); en.time=val("f-time"); en.place=val("f-place");
+      en.escort=val("f-escort"); en.dress=val("f-dress"); en.note=val("f-note"); en.status=status;
+      delete en.sample;
+      if(!en.title && !en.note) return false;
+      data.director[k]=data.director[k]||[]; if(isNew) data.director[k].push(en);
+      stripSamples("director"); save("director"); return true;
+    }, function(){
+      data.director[k]=(data.director[k]||[]).filter(function(x){ return x.id!==entryId; });
+      if(!data.director[k].length) delete data.director[k];
+      stripSamples("director"); save("director");
+    });
+  }
+
+  function openFleet(key,entryId){
+    if(readonly()) return;
+    var parts=key.split("|"), d=+parts[1], veh=byId(config.vehicles,parts[0]);
+    var list=data.fleet[key]||[], en=byId(list,entryId), isNew=!en;
+    if(isNew) en={id:uid(),time:"",dest:"",requester:"",people:"",purpose:"",status:"req",note:""};
+    openDrawer(
+      '<h2 id="drawer-title">'+(isNew?"จองรถ":"แก้ไขการใช้รถ")+'</h2>'+
+      '<p class="sub">'+dayLabel(d)+' • '+esc(veh?veh.name:"")+' '+esc(veh&&veh.plate?"("+veh.plate+")":"")+
+        ' • คนขับ '+esc(veh&&veh.driver?veh.driver:"ยังไม่ระบุ")+'</p>'+
+      fieldText("f-dest","ปลายทาง",en.dest,"เช่น ศาลากลางจังหวัด")+
+      '<div class="row2">'+fieldText("f-time","เวลาไป–กลับ",en.time,"08:30–12:00")+fieldText("f-people","จำนวนผู้โดยสาร",en.people,"4")+'</div>'+
+      '<div class="row2">'+fieldText("f-req","ผู้ขอใช้",en.requester,"ชื่อ-สกุล")+
+        fieldText("f-pos","ตำแหน่ง",en.position,"เช่น นักวิเคราะห์นโยบายฯ")+'</div>'+
+      fieldText("f-purpose","วัตถุประสงค์",en.purpose,"เช่น ส่งเอกสารและประชุม")+
+      fieldText("f-ret","วันที่กลับ (เว้นว่างถ้ากลับวันเดียวกัน)",en.retdate,"เช่น 22 กันยายน 2569")+
+      statusSegs("fleet",en.status)+
+      '<hr class="sep"><p class="loglabel">บันทึกการใช้รถจริง <span>พนักงานขับรถกรอกหลังใช้งาน</span></p>'+
+      '<div class="row2">'+fieldText("f-out","เวลาออกจริง",en.outTime,"08:35")+
+        fieldText("f-in","เวลากลับถึงจริง",en.inTime,"12:10")+'</div>'+
+      '<div class="row2">'+fieldText("f-odo1","เลขไมล์ออก (กม.)",en.odoStart,"45120")+
+        fieldText("f-odo2","เลขไมล์กลับ (กม.)",en.odoEnd,"45162")+'</div>'+
+      '<div class="row2">'+fieldText("f-driver","ผู้ขับ",en.driver,(veh&&veh.driver)||"ชื่อพนักงานขับรถ")+
+        fieldText("f-fuel","น้ำมันที่เติม",en.fuel,"20 ลิตร / 800 บาท")+'</div>'+
+      '<p class="note" id="f-dist">'+distText(en)+'</p>'+
+      '<div class="field"><label for="f-note">หมายเหตุ</label><textarea id="f-note" placeholder="จุดรับ-ส่ง เหตุขัดข้อง งานซ่อมบำรุง…">'+esc(en.note)+'</textarea></div>'+
+      actions(isNew)+
+      '<button class="btn" type="button" id="f-form">พิมพ์ใบขออนุญาตใช้รถ (แบบ ๓)</button>'+
+      '<p class="note">ปุ่มนี้จะบันทึกข้อมูลที่กรอกไว้ แล้วเปิดหน้าต่างพิมพ์เป็นหนังสือราชการเสนอผู้บริหาร</p>'
+    );
+    var status=en.status; wireStatus(function(s){ status=s; });
+    drawer.addEventListener("input", function(e){
+      if(e.target.id==="f-odo1" || e.target.id==="f-odo2"){
+        drawer.querySelector("#f-dist").textContent =
+          distText({odoStart:val("f-odo1"), odoEnd:val("f-odo2")});
+      }
+    });
+    function collect(){
+      en.dest=val("f-dest"); en.time=val("f-time"); en.people=val("f-people");
+      en.requester=val("f-req"); en.position=val("f-pos"); en.purpose=val("f-purpose");
+      en.retdate=val("f-ret"); en.note=val("f-note"); en.status=status;
+      en.outTime=val("f-out"); en.inTime=val("f-in");
+      en.odoStart=val("f-odo1"); en.odoEnd=val("f-odo2");
+      en.driver=val("f-driver"); en.fuel=val("f-fuel");
+      delete en.sample;
+    }
+    drawer.querySelector("#f-form").addEventListener("click", function(){
+      collect();
+      if(en.dest || en.purpose){
+        data.fleet[key]=data.fleet[key]||[];
+        if(isNew && data.fleet[key].indexOf(en)<0) data.fleet[key].push(en);
+        stripSamples("fleet"); save("fleet"); render();
+      }
+      closeDrawer();
+      printRequestForm(en, d, veh);
+    });
+    bind(isNew, function(){
+      collect();
+      if(!en.dest && !en.purpose) return false;
+      data.fleet[key]=data.fleet[key]||[]; if(isNew) data.fleet[key].push(en);
+      stripSamples("fleet"); save("fleet"); return true;
+    }, function(){
+      data.fleet[key]=(data.fleet[key]||[]).filter(function(x){ return x.id!==entryId; });
+      if(!data.fleet[key].length) delete data.fleet[key];
+      stripSamples("fleet"); save("fleet");
+    });
+  }
+
+  function logKey(d){ return ((config.vehicles[0]||{}).id||"v1")+"|"+d; }
+  function dayLog(d){ return (data.fleetlog||{})[logKey(d)] || null; }
+
+  function openDayLog(d){
+    if(readonly()) return;
+    var veh=config.vehicles[0]||{}, key=logKey(d);
+    var lg=clone(dayLog(d) || {outTime:"",inTime:"",odoStart:"",odoEnd:"",driver:veh.driver||"",dest:"",fuel:"",note:""});
+    openDrawer(
+      '<h2 id="drawer-title">ลงเวลาการใช้รถประจำวัน</h2>'+
+      '<p class="sub">'+dayLabel(d)+' • '+esc(veh.name||"")+' '+esc(veh.plate?"("+veh.plate+")":"")+'</p>'+
+      '<div class="row2">'+fieldText("g-out","เวลาออก",lg.outTime,"08:00")+fieldText("g-in","เวลากลับถึง",lg.inTime,"16:30")+'</div>'+
+      '<div class="row2">'+fieldText("g-odo1","เลขไมล์ออก (กม.)",lg.odoStart,"45120")+fieldText("g-odo2","เลขไมล์กลับ (กม.)",lg.odoEnd,"45162")+'</div>'+
+      fieldText("g-dest","เส้นทาง / สถานที่ที่ไป",lg.dest,"เช่น สำนักงาน–ศาลากลาง–สำนักงาน")+
+      '<div class="row2">'+fieldText("g-driver","พนักงานขับรถ",lg.driver,"ชื่อ-สกุล")+fieldText("g-fuel","น้ำมันที่เติม",lg.fuel,"20 ลิตร / 800 บาท")+'</div>'+
+      '<p class="note" id="g-dist">'+distText(lg)+'</p>'+
+      '<div class="field"><label for="g-note">หมายเหตุ</label><textarea id="g-note" placeholder="เหตุขัดข้อง งานซ่อมบำรุง ผู้โดยสาร…">'+esc(lg.note)+'</textarea></div>'+
+      '<div class="drawer-actions"><button class="btn primary grow" type="button" id="g-save">บันทึก</button>'+
+      '<button class="btn" type="button" id="g-cancel">ยกเลิก</button>'+
+      (dayLog(d)?'<button class="btn danger" type="button" id="g-del">ลบ</button>':"")+'</div>'
+    );
+    drawer.addEventListener("input", function(e){
+      if(e.target.id==="g-odo1" || e.target.id==="g-odo2")
+        drawer.querySelector("#g-dist").textContent = distText({odoStart:val("g-odo1"), odoEnd:val("g-odo2")});
+    });
+    drawer.querySelector("#g-cancel").addEventListener("click", closeDrawer);
+    if(dayLog(d)) drawer.querySelector("#g-del").addEventListener("click", function(){
+      delete data.fleetlog[key]; save("fleetlog"); render(); closeDrawer();
+    });
+    drawer.querySelector("#g-save").addEventListener("click", function(){
+      var rec={outTime:val("g-out"), inTime:val("g-in"), odoStart:val("g-odo1"), odoEnd:val("g-odo2"),
+               dest:val("g-dest"), driver:val("g-driver"), fuel:val("g-fuel"), note:val("g-note")};
+      var any=false; Object.keys(rec).forEach(function(k){ if(rec[k]) any=true; });
+      data.fleetlog=data.fleetlog||{};
+      if(any) data.fleetlog[key]=rec; else delete data.fleetlog[key];
+      save("fleetlog"); render(); closeDrawer();
+    });
+  }
+
+  function distKm(en){
+    var a=parseFloat(en.odoStart), b=parseFloat(en.odoEnd);
+    if(isFinite(a) && isFinite(b) && b>=a) return Math.round((b-a)*10)/10;
+    return null;
+  }
+  function distText(en){
+    var d=distKm(en||{});
+    return d===null ? "กรอกเลขไมล์ออกและกลับ ระบบจะคำนวณระยะทางให้อัตโนมัติ" : "ระยะทางที่ใช้ "+d+" กม.";
+  }
+  function logLine(en){
+    var bits=[];
+    if(en.outTime||en.inTime) bits.push("ออกจริง "+(en.outTime||"—")+" กลับ "+(en.inTime||"—"));
+    var d=distKm(en); if(d!==null) bits.push(d+" กม.");
+    if(en.fuel) bits.push("เติม "+en.fuel);
+    return bits.join(" • ");
+  }
+
+  /* ---------------- ใบขออนุญาตใช้ยานพาหนะส่วนกลาง (แบบ ๓) ---------------- */
+  function fill(v, cls){ return '<span class="fill '+(cls||"")+'">'+(v?esc(v):"")+'</span>'; }
+  function printRequestForm(en, d, veh){
+    en = en || {}; veh = veh || config.vehicles[0] || {};
+    var today=new Date();
+    var times=String(en.time||"").split(/[\u2013\u2014\-~]/);
+    var goTime=(times[0]||"").trim(), backTime=(times[1]||"").trim();
+    var goDate = d ? (d+" "+MONF[cursor.getMonth()]+" "+(cursor.getFullYear()+543)) : "";
+    var backDate = (en.retdate||"").trim() || goDate;
+    var vehText = [veh.name, veh.plate].filter(Boolean).join(" ทะเบียน ");
+
+    var lh=config.letterhead||{};
+    var head='';
+    if(lh.reserve) head+='<div class="reserve"></div>';
+    if(lh.org) head+='<div class="org">'+esc(lh.org)+(lh.unit?'<div class="unit">'+esc(lh.unit)+'</div>':'')+'</div>';
+    head+='<div class="topline"><span class="docno">'+(lh.docno?'ที่ '+esc(lh.docno)+'/'+fill(""):'')+'</span><span class="code">แบบ ๓</span></div>';
+
+    document.getElementById("form-sheet").innerHTML='<div class="sheet">'+
+      head+
+      '<div class="title">ใบขออนุญาตใช้ยานพาหนะส่วนกลาง/รถรับรอง</div>'+
+      '<div class="datetop">วันที่ '+fill(String(today.getDate()))+' เดือน '+fill(MONF[today.getMonth()],"grow")+
+        ' พ.ศ. '+fill(String(today.getFullYear()+543))+'</div>'+
+      '<div class="body">'+
+      '<p>เรียน (ผู้มีอำนาจสั่งใช้ยานพาหนะส่วนกลาง/รถรับรอง) '+
+        fill([config.director.position,config.director.name].filter(Boolean).join(" "),"wide")+'</p>'+
+      '<p class="indent">ข้าพเจ้า '+fill(en.requester,"grow")+' ตำแหน่ง '+fill(en.position,"grow")+'</p>'+
+      '<p>ขออนุญาตใช้ยานพาหนะส่วนกลาง/รถรับรอง '+fill(vehText,"grow")+' (ไปที่ไหน) '+fill(en.dest,"grow")+'</p>'+
+      '<p>เพื่อ '+fill(en.purpose,"wide")+' มีคนนั่ง '+fill(en.people)+' คน</p>'+
+      '<p>ในวันที่ '+fill(goDate,"grow")+' เวลา '+fill(goTime,"grow")+'</p>'+
+      '<p>ในวันที่ '+fill(backDate,"grow")+' เวลา '+fill(backTime,"grow")+'</p>'+
+      '</div>'+
+      '<div class="signblock">'+
+      '<div class="srow">'+fill("")+'<span class="role">ผู้ขออนุญาต</span></div>'+
+      '<div class="srow">'+fill("")+'<span class="role">ผู้อำนวยการสำนัก/กอง</span></div>'+
+      '<div class="subrole">หรือผู้แทน</div>'+
+      '<div class="srow">'+fill("")+'<span class="role">(วัน เดือน ปี)</span></div>'+
+      '</div>'+
+      '<div class="approve"><div class="rule"></div>'+
+      '<p>(ลงนามผู้มีอำนาจสั่งใช้ยานพาหนะส่วนกลาง/รถรับรอง) '+fill("","grow")+'</p>'+
+      '<div class="dates">'+fill("")+' / '+fill("")+' / '+fill("")+'</div>'+
+      '</div></div>';
+
+    document.body.classList.add("printing-form");
+    function done(){ document.body.classList.remove("printing-form"); window.removeEventListener("afterprint",done); }
+    window.addEventListener("afterprint",done);
+    setTimeout(function(){ window.print(); setTimeout(done,1500); },60);
+  }
+
+  function monthlyLogRows(){
+    var v=config.vehicles[0]||{}, out=[];
+    for(var d=1; d<=daysInMonth(); d++){
+      var lg=(data.fleetlog||{})[(v.id||"v1")+"|"+d];
+      if(lg) out.push({day:d, src:lg, dest:lg.dest||""});
+      (data.fleet[(v.id||"v1")+"|"+d]||[]).forEach(function(e){
+        if(e.sample) return;
+        if(!e.outTime && !e.inTime && !e.odoStart && !e.odoEnd) return;
+        out.push({day:d, src:e, dest:e.dest||e.purpose||""});
+      });
+    }
+    return out;
+  }
+
+  function printMonthlyLog(){
+    var v=config.vehicles[0]||{}, lh=config.letterhead||{}, rows=monthlyLogRows();
+    var totalKm=0;
+    var body=rows.map(function(r){
+      var e=r.src, km=distKm(e);
+      if(km!==null) totalKm+=km;
+      return '<tr>'+
+        '<td class="c">'+r.day+'</td>'+
+        '<td class="c">'+esc(e.outTime||"")+'</td>'+
+        '<td class="c">'+esc(e.inTime||"")+'</td>'+
+        '<td>'+esc(r.dest)+'</td>'+
+        '<td class="r">'+esc(e.odoStart||"")+'</td>'+
+        '<td class="r">'+esc(e.odoEnd||"")+'</td>'+
+        '<td class="r">'+(km===null?"":km)+'</td>'+
+        '<td>'+esc(e.fuel||"")+'</td>'+
+        '<td></td>'+
+      '</tr>';
+    }).join("");
+    if(!rows.length) body='<tr><td class="c" colspan="9" style="height:2cm">— ยังไม่มีบันทึกการใช้รถในเดือนนี้ —</td></tr>';
+
+    var head='';
+    if(lh.reserve) head+='<div class="reserve"></div>';
+    if(lh.org) head+='<div class="org">'+esc(lh.org)+(lh.unit?'<div class="unit">'+esc(lh.unit)+'</div>':'')+'</div>';
+    head+='<div class="topline"><span class="docno"></span><span class="code">แบบ ๔</span></div>';
+
+    document.getElementById("form-sheet").innerHTML='<div class="sheet logsheet">'+head+
+      '<div class="loghead">สมุดบันทึกการใช้รถส่วนกลาง</div>'+
+      '<div class="logsub">ประจำเดือน '+MONF[cursor.getMonth()]+' พ.ศ. '+(cursor.getFullYear()+543)+'</div>'+
+      '<div class="logmeta">'+
+        '<span>รถหมายเลขทะเบียน '+fill(v.plate,"grow")+'</span>'+
+        '<span>ชนิด/ยี่ห้อ '+fill(v.name,"grow")+'</span>'+
+        '<span>พนักงานขับรถ '+fill(v.driver,"grow")+'</span>'+
+      '</div>'+
+      '<table><thead><tr>'+
+        '<th style="width:1.4cm">วันที่</th><th style="width:1.8cm">เวลาออก</th><th style="width:1.8cm">เวลากลับ</th>'+
+        '<th>รายการเดินทาง (จาก–ถึง / เหตุผล)</th>'+
+        '<th style="width:2.1cm">เลขไมล์ออก</th><th style="width:2.1cm">เลขไมล์กลับ</th><th style="width:1.9cm">ระยะทาง (กม.)</th>'+
+        '<th style="width:2.6cm">น้ำมันที่เติม</th><th style="width:2.8cm">ลายมือชื่อผู้ขับ</th>'+
+      '</tr></thead><tbody>'+body+'</tbody>'+
+      '<tfoot><tr><td class="c" colspan="6">รวมระยะทางทั้งเดือน</td><td class="r">'+(Math.round(totalKm*10)/10)+'</td><td colspan="2"></td></tr></tfoot></table>'+
+      '<div class="signrow">'+
+        '<div><div class="ln"></div>(<span>'+esc(v.driver||"")+'</span>)<br>พนักงานขับรถ</div>'+
+        '<div><div class="ln"></div>(&nbsp;)<br>หัวหน้าหน่วยงาน / ผู้ควบคุม</div>'+
+        '<div><div class="ln"></div>('+esc(config.director.name||"")+')<br>'+esc(config.director.position||"ผู้อำนวยการ")+'</div>'+
+      '</div></div>';
+
+    document.body.classList.add("printing-form");
+    function done(){ document.body.classList.remove("printing-form"); window.removeEventListener("afterprint",done); }
+    window.addEventListener("afterprint",done);
+    setTimeout(function(){ window.print(); setTimeout(done,1500); },60);
+  }
+
+  /* ---------------- settings ---------------- */
+  function openSettings(){
+    if(readonly()) return;
+    openDrawer(
+      '<div id="set-root" style="display:flex; flex-direction:column; gap:14px">'+
+      '<h2 id="drawer-title">ตั้งค่า</h2>'+
+      '<p class="sub">การตั้งค่านี้ใช้ร่วมกันทุกเดือนและทุกคนในทีม</p>'+
+      '<div class="row2">'+fieldText("c-dname","ชื่อผู้อำนวยการ",config.director.name,"ชื่อ-สกุล")+
+        fieldText("c-dpos","ตำแหน่ง",config.director.position,"ผู้อำนวยการสำนักงาน")+'</div>'+
+      '<hr class="sep">'+
+      '<div class="field"><label>หัวกระดาษใบขออนุญาตใช้รถ (แบบ ๓)</label>'+
+        fieldText("c-org","ชื่อหน่วยงาน",(config.letterhead||{}).org,"เช่น องค์การบริหารส่วนตำบล…")+
+        '<div class="row2">'+fieldText("c-unit","ส่วนราชการ / สำนัก-กอง",(config.letterhead||{}).unit,"เช่น สำนักปลัด")+
+        fieldText("c-docno","เลขที่หนังสือ (ส่วนหน้า)",(config.letterhead||{}).docno,"เช่น อบต. ๑๒๓๔")+'</div>'+
+        '<label style="display:flex; align-items:center; gap:8px; font-weight:400; text-transform:none; letter-spacing:0; color:var(--ink); font-size:13.5px; margin-top:4px">'+
+        '<input type="checkbox" id="c-reserve" style="width:auto"'+((config.letterhead||{}).reserve?" checked":"")+'> เว้นที่ว่างด้านบน 3 ซม. สำหรับกระดาษหัวจดหมาย (ครุฑ)</label></div>'+
+      '<hr class="sep">'+
+      '<div class="field"><label>สมาชิกทีม</label><div class="list" id="m-list"></div>'+
+      '<button class="btn" type="button" id="m-add" style="align-self:flex-start; margin-top:6px">+ เพิ่มสมาชิก</button></div>'+
+      '<hr class="sep">'+
+      '<div class="field"><label>ช่วงเวลาในหนึ่งวัน (ตารางงานทีม)</label><div class="list" id="s-list"></div>'+
+      '<button class="btn" type="button" id="s-add" style="align-self:flex-start; margin-top:6px">+ เพิ่มช่วงเวลา</button></div>'+
+      '<hr class="sep">'+
+      '<div class="field"><label>รถและพนักงานขับรถ</label><div class="list" id="v-list"></div>'+
+      '<button class="btn" type="button" id="v-add" style="align-self:flex-start; margin-top:6px">+ เพิ่มรถ</button></div>'+
+      '<p class="note">การลบช่วงเวลาหรือลบรถ จะลบรายการในคอลัมน์นั้นของเดือนที่เปิดอยู่ด้วย</p>'+
+      '<div class="drawer-actions"><button class="btn primary grow" type="button" id="s-close">เสร็จสิ้น</button></div></div>'
+    );
+    var root=drawer.querySelector("#set-root");
+    function drawM(){
+      drawer.querySelector("#m-list").innerHTML=config.members.map(function(m,i){
+        return '<div class="list-row"><input type="color" value="'+esc(m.color)+'" data-mc="'+i+'" aria-label="สีประจำตัว">'+
+          '<input type="text" value="'+esc(m.name)+'" data-mn="'+i+'" aria-label="ชื่อสมาชิก">'+
+          '<button class="btn ghost" type="button" data-mx="'+i+'" aria-label="ลบสมาชิก">✕</button></div>'; }).join("");
+    }
+    function drawS(){
+      drawer.querySelector("#s-list").innerHTML=config.slots.map(function(s,i){
+        return '<div class="list-row"><input type="text" value="'+esc(s.name)+'" data-sn="'+i+'" aria-label="ชื่อช่วงเวลา">'+
+          '<input type="text" value="'+esc(s.time||"")+'" data-st="'+i+'" placeholder="09:00–12:00" aria-label="เวลา">'+
+          '<button class="btn ghost" type="button" data-sx="'+i+'" aria-label="ลบช่วงเวลา">✕</button></div>'; }).join("");
+    }
+    function drawV(){
+      drawer.querySelector("#v-list").innerHTML=config.vehicles.map(function(v,i){
+        return '<div class="list-row"><input type="color" value="'+esc(v.color||"#7b5cf0")+'" data-vc="'+i+'" aria-label="สีประจำรถ">'+
+          '<input type="text" value="'+esc(v.name)+'" data-vn="'+i+'" placeholder="รถตู้ 1" aria-label="ชื่อรถ">'+
+          '<button class="btn ghost" type="button" data-vx="'+i+'" aria-label="ลบรถ">✕</button></div>'+
+          '<div class="list-row" style="margin-top:-4px">'+
+          '<input type="text" value="'+esc(v.plate||"")+'" data-vp="'+i+'" placeholder="ทะเบียน" aria-label="ทะเบียนรถ">'+
+          '<input type="text" value="'+esc(v.driver||"")+'" data-vd="'+i+'" placeholder="ชื่อพนักงานขับรถ" aria-label="พนักงานขับรถ"></div>'; }).join("");
+    }
+    drawM(); drawS(); drawV();
+
+    root.addEventListener("input", function(e){
+      var t=e.target, a=function(n){ return t.getAttribute(n); };
+      if(t.id==="c-dname"){ config.director.name=t.value; saveConfig(); renderChrome(); return; }
+      if(t.id==="c-dpos"){ config.director.position=t.value; saveConfig(); return; }
+      config.letterhead = config.letterhead || {org:"",unit:"",docno:"",reserve:false};
+      if(t.id==="c-org"){ config.letterhead.org=t.value; saveConfig(); return; }
+      if(t.id==="c-unit"){ config.letterhead.unit=t.value; saveConfig(); return; }
+      if(t.id==="c-docno"){ config.letterhead.docno=t.value; saveConfig(); return; }
+      if(t.id==="c-reserve"){ config.letterhead.reserve=t.checked; saveConfig(); return; }
+      if(a("data-mn")!==null){ config.members[+a("data-mn")].name=t.value; }
+      else if(a("data-mc")!==null){ config.members[+a("data-mc")].color=t.value; }
+      else if(a("data-sn")!==null){ config.slots[+a("data-sn")].name=t.value; }
+      else if(a("data-st")!==null){ config.slots[+a("data-st")].time=t.value; }
+      else if(a("data-vn")!==null){ config.vehicles[+a("data-vn")].name=t.value; }
+      else if(a("data-vp")!==null){ config.vehicles[+a("data-vp")].plate=t.value; }
+      else if(a("data-vd")!==null){ config.vehicles[+a("data-vd")].driver=t.value; }
+      else if(a("data-vc")!==null){ config.vehicles[+a("data-vc")].color=t.value; }
+      else return;
+      saveConfig(); render();
+    });
+    root.addEventListener("click", function(e){
+      var b=e.target.closest("button"); if(!b) return;
+      var a=function(n){ return b.getAttribute(n); };
+      if(a("data-mx")!==null){ config.members.splice(+a("data-mx"),1); saveConfig(); drawM(); render(); }
+      else if(a("data-sx")!==null){
+        var s=config.slots.splice(+a("data-sx"),1)[0];
+        Object.keys(data.team).forEach(function(k){ if(k.indexOf(s.id+"|")===0) delete data.team[k]; });
+        saveConfig(); save("team"); drawS(); render();
+      }else if(a("data-vx")!==null){
+        var v=config.vehicles.splice(+a("data-vx"),1)[0];
+        Object.keys(data.fleet).forEach(function(k){ if(k.indexOf(v.id+"|")===0) delete data.fleet[k]; });
+        saveConfig(); save("fleet"); drawV(); render();
+      }
+    });
+    var palette=["#e8407f","#7b5cf0","#29b6f6","#f7941e","#1eab6d","#ef4b6b"];
+    drawer.querySelector("#m-add").addEventListener("click", function(){
+      config.members.push({id:uid(),name:"สมาชิกใหม่",color:palette[config.members.length%palette.length]});
+      saveConfig(); drawM(); render();
+    });
+    drawer.querySelector("#s-add").addEventListener("click", function(){
+      config.slots.push({id:uid(),name:"ช่วงใหม่",time:""}); saveConfig(); drawS(); render();
+    });
+    drawer.querySelector("#v-add").addEventListener("click", function(){
+      config.vehicles.push({id:uid(),name:"รถคันใหม่",plate:"",driver:"",color:palette[config.vehicles.length%palette.length]});
+      saveConfig(); drawV(); render();
+    });
+    drawer.querySelector("#s-close").addEventListener("click", closeDrawer);
+  }
+
+  /* ---------------- events ---------------- */
+  document.getElementById("board").addEventListener("click", function(e){
+    var b=e.target.closest("[data-addday]");
+    if(b){ openDirector(+b.getAttribute("data-addday"), null); return; }
+    var bl=e.target.closest("[data-daylog]");
+    if(bl){ openDayLog(+bl.getAttribute("data-daylog")); return; }
+    var bv=e.target.closest("[data-addveh]");
+    if(bv){ openFleet(config.vehicles[0].id+"|"+bv.getAttribute("data-addveh"), null); return; }
+    var m=e.target.closest("[data-mission]");
+    if(m){ openDirector(+m.getAttribute("data-day"), m.getAttribute("data-mission")); return; }
+    var en=e.target.closest("[data-entry]");
+    if(en){ (view==="team"?openTeam:openFleet)(en.getAttribute("data-key"), en.getAttribute("data-entry")); return; }
+    var cell=e.target.closest("[data-cell]");
+    if(cell) (view==="team"?openTeam:openFleet)(cell.getAttribute("data-cell"), null);
+  });
+  document.getElementById("board").addEventListener("keydown", function(e){
+    if(e.key!=="Enter" && e.key!==" ") return;
+    var cell=e.target.closest("[data-cell]");
+    if(cell && e.target===cell){ e.preventDefault(); (view==="team"?openTeam:openFleet)(cell.getAttribute("data-cell"), null); }
+  });
+  document.querySelector(".tabs").addEventListener("click", function(e){
+    var b=e.target.closest(".tab"); if(!b) return;
+    view=b.getAttribute("data-view"); render();
+  });
+  function shiftMonth(n){ cursor=new Date(cursor.getFullYear(), cursor.getMonth()+n, 1); loadMonth(); render(); }
+  document.getElementById("prev").addEventListener("click", function(){ shiftMonth(-1); });
+  document.getElementById("next").addEventListener("click", function(){ shiftMonth(1); });
+  document.getElementById("today").addEventListener("click", function(){
+    var n=new Date(); cursor=new Date(n.getFullYear(), n.getMonth(), 1); loadMonth(); render();
+  });
+  document.getElementById("btn-weekend").addEventListener("click", function(){
+    hideWeekend=!hideWeekend; lsSet(LS+"/hideWeekend",hideWeekend); render();
+  });
+  document.getElementById("btn-blankform").addEventListener("click", function(){ printRequestForm(null, 0, config.vehicles[0]); });
+  document.getElementById("btn-logbook").addEventListener("click", printMonthlyLog);
+  document.getElementById("btn-settings").addEventListener("click", openSettings);
+  document.getElementById("btn-print").addEventListener("click", function(){ window.print(); });
+
+  document.getElementById("btn-csv").addEventListener("click", function(){
+    var rows=[], name="", n=daysInMonth(), d;
+    function dstr(day){ return ymd(dateOf(day)); }
+    if(view==="team"){
+      name="ตารางงานทีม";
+      rows.push(["วันที่","วัน","ช่วงเวลา","เวลา","งาน","ผู้รับผิดชอบ","สถานะ","รายละเอียด"]);
+      for(d=1; d<=n; d++) config.slots.forEach(function(s){
+        (data.team[s.id+"|"+d]||[]).forEach(function(e){
+          var m=byId(config.members,e.member);
+          rows.push([dstr(d),DOW[dowOf(d)],s.name,e.time||s.time||"",e.title||"",m?m.name:"",statusLabel("team",e.status),e.note||""]);
+        });
+      });
+    }else if(view==="director"){
+      name="ตารางงานผู้อำนวยการ";
+      rows.push(["วันที่","วัน","เวลา","ภารกิจ","สถานที่","ผู้ติดตาม","การแต่งกาย","สถานะ","หมายเหตุ"]);
+      for(d=1; d<=n; d++) (data.director[String(d)]||[]).forEach(function(e){
+        rows.push([dstr(d),DOW[dowOf(d)],e.time||"",e.title||"",e.place||"",e.escort||"",e.dress||"",statusLabel("director",e.status),e.note||""]);
+      });
+    }else{
+      name="ตารางการใช้รถ";
+      rows.push(["วันที่","วัน","รถ","ทะเบียน","พนักงานขับรถ","เวลาไป-กลับ (จอง)","ปลายทาง","ผู้ขอใช้","ผู้โดยสาร","วัตถุประสงค์","สถานะ","เวลาออกจริง","เวลากลับจริง","เลขไมล์ออก","เลขไมล์กลับ","ระยะทาง (กม.)","น้ำมันที่เติม","หมายเหตุ"]);
+      for(d=1; d<=n; d++) config.vehicles.forEach(function(v){
+        (data.fleet[v.id+"|"+d]||[]).forEach(function(e){
+          var km=distKm(e);
+          rows.push([dstr(d),DOW[dowOf(d)],v.name,v.plate||"",e.driver||v.driver||"",e.time||"",e.dest||"",e.requester||"",e.people||"",e.purpose||"",statusLabel("fleet",e.status),
+            e.outTime||"",e.inTime||"",e.odoStart||"",e.odoEnd||"",km===null?"":km,e.fuel||"",e.note||""]);
+        });
+      });
+    }
+    if(view==="fleet"){
+      var lv=config.vehicles[0]||{};
+      rows.push([]);
+      rows.push(["บันทึกการใช้รถประจำวัน"]);
+      rows.push(["วันที่","วัน","เวลาออก","เวลากลับ","เส้นทาง","เลขไมล์ออก","เลขไมล์กลับ","ระยะทาง (กม.)","พนักงานขับรถ","น้ำมันที่เติม","หมายเหตุ"]);
+      for(var dd=1; dd<=n; dd++){
+        var lg=(data.fleetlog||{})[(lv.id||"v1")+"|"+dd];
+        if(!lg) continue;
+        var kmx=distKm(lg);
+        rows.push([dstr(dd),DOW[dowOf(dd)],lg.outTime||"",lg.inTime||"",lg.dest||"",lg.odoStart||"",lg.odoEnd||"",kmx===null?"":kmx,lg.driver||"",lg.fuel||"",lg.note||""]);
+      }
+    }
+    var csv="﻿"+rows.map(function(r){ return r.map(function(c){ return '"'+String(c).replace(/"/g,'""')+'"'; }).join(","); }).join("\r\n");
+    var blob=new Blob([csv], {type:"text/csv;charset=utf-8"});
+    var a=document.createElement("a");
+    a.href=URL.createObjectURL(blob);
+    a.download=name+"-"+monthKey()+".csv";
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  });
+
+  /* ---------------- boot ---------------- */
+  function applyRole(){
+    var isAdmin = ME && ME.role==="admin";
+    document.getElementById("who").textContent = (ME? (ME.name||ME.username) : "") +
+      " · " + ({admin:"ผู้ดูแลระบบ", user:"เจ้าหน้าที่", viewer:"ดูอย่างเดียว"}[ME?ME.role:"viewer"]||"");
+    document.getElementById("btn-users").hidden = !isAdmin;
+    document.getElementById("btn-settings").hidden = readonly();
+    if(readonly()) document.body.classList.add("readonly");
+  }
+
+  api("/api/me").then(function(r){
+    ME=r.user;
+    applyRole();
+    if(ME.mustChange) setTimeout(openPassword, 400);
+    return api("/api/config");
+  }).then(function(c){
+    if(c && (c.members||c.slots||c.vehicles||c.director||c.letterhead)){
+      config.members  = c.members  || config.members;
+      config.slots    = c.slots    || config.slots;
+      config.vehicles = c.vehicles || config.vehicles;
+      config.director = c.director || config.director;
+      config.letterhead = c.letterhead || config.letterhead;
+    }
+    ["team","director","fleet"].forEach(function(v){ data[v]=samples(v); isSample[v]=true; });
+    data.fleetlog={};
+    render();
+    loadMonth();
+    startPolling();
+  }).catch(function(){});
+
+  /* ---------------- บัญชีผู้ใช้ ---------------- */
+  function openPassword(){
+    openDrawer(
+      '<h2 id="drawer-title">เปลี่ยนรหัสผ่าน</h2>'+
+      '<p class="sub">'+esc((ME&&ME.name)||"")+' ('+esc((ME&&ME.username)||"")+')</p>'+
+      '<div class="field"><label for="p-old">รหัสผ่านเดิม</label><input type="password" id="p-old"></div>'+
+      '<div class="field"><label for="p-new">รหัสผ่านใหม่ (อย่างน้อย 6 ตัว)</label><input type="password" id="p-new"></div>'+
+      '<p class="note" id="p-msg"></p>'+
+      '<div class="drawer-actions"><button class="btn primary grow" type="button" id="p-save">บันทึก</button>'+
+      '<button class="btn" type="button" id="p-cancel">ปิด</button></div>'
+    );
+    drawer.querySelector("#p-cancel").addEventListener("click", closeDrawer);
+    drawer.querySelector("#p-save").addEventListener("click", function(){
+      api("/api/password", {method:"POST", body:{
+        oldPassword: drawer.querySelector("#p-old").value,
+        newPassword: drawer.querySelector("#p-new").value
+      }}).then(function(){ ME.mustChange=false; closeDrawer(); setSync("เปลี่ยนรหัสผ่านแล้ว"); })
+        .catch(function(e){ drawer.querySelector("#p-msg").textContent=e.message; });
+    });
+  }
+
+  function openUsers(){
+    api("/api/users").then(function(list){
+      openDrawer(
+        '<div id="u-root" style="display:flex; flex-direction:column; gap:14px">'+
+        '<h2 id="drawer-title">ผู้ใช้งานระบบ</h2>'+
+        '<p class="sub">admin = แก้ไขทุกอย่างและจัดการผู้ใช้ • เจ้าหน้าที่ = กรอก/แก้ตาราง • ดูอย่างเดียว = อ่านและพิมพ์</p>'+
+        '<div class="list" id="u-list">'+list.map(function(u){
+          return '<div class="list-row"><span style="flex:1">'+esc(u.name)+' <span class="note">('+esc(u.username)+')</span></span>'+
+            '<select data-urole="'+esc(u.username)+'" style="width:auto">'+
+              ['admin','user','viewer'].map(function(r){
+                var lb={admin:"ผู้ดูแลระบบ",user:"เจ้าหน้าที่",viewer:"ดูอย่างเดียว"}[r];
+                return '<option value="'+r+'"'+(u.role===r?" selected":"")+'>'+lb+'</option>';
+              }).join("")+'</select>'+
+            '<button class="btn ghost" type="button" data-upw="'+esc(u.username)+'" title="ตั้งรหัสผ่านใหม่">คีย์</button>'+
+            (u.username==="admin"?"":'<button class="btn ghost" type="button" data-udel="'+esc(u.username)+'">✕</button>')+
+          '</div>';
+        }).join("")+'</div>'+
+        '<hr class="sep"><p class="loglabel">เพิ่มผู้ใช้ใหม่</p>'+
+        '<div class="row2">'+fieldText("u-user","ชื่อผู้ใช้ (a-z 0-9)","","somchai")+fieldText("u-name","ชื่อ-สกุล","","สมชาย ใจดี")+'</div>'+
+        '<div class="row2"><div class="field"><label for="u-role">สิทธิ์</label><select id="u-role">'+
+          '<option value="user">เจ้าหน้าที่</option><option value="viewer">ดูอย่างเดียว</option><option value="admin">ผู้ดูแลระบบ</option>'+
+        '</select></div>'+fieldText("u-pw","รหัสผ่านเริ่มต้น","","อย่างน้อย 6 ตัว")+'</div>'+
+        '<p class="note" id="u-msg"></p>'+
+        '<div class="drawer-actions"><button class="btn primary grow" type="button" id="u-add">เพิ่มผู้ใช้</button>'+
+        '<button class="btn" type="button" id="u-close">ปิด</button></div></div>'
+      );
+      var root=drawer.querySelector("#u-root");
+      function msg(t){ drawer.querySelector("#u-msg").textContent=t||""; }
+      root.addEventListener("change", function(e){
+        var un=e.target.getAttribute("data-urole");
+        if(!un) return;
+        api("/api/users/"+encodeURIComponent(un), {method:"PUT", body:{role:e.target.value}})
+          .then(function(){ msg("อัปเดตสิทธิ์ของ "+un+" แล้ว"); }).catch(function(er){ msg(er.message); });
+      });
+      root.addEventListener("click", function(e){
+        var b=e.target.closest("button"); if(!b) return;
+        var pw=b.getAttribute("data-upw"), del=b.getAttribute("data-udel");
+        if(pw){
+          var v=prompt("ตั้งรหัสผ่านใหม่ให้ "+pw+" (อย่างน้อย 6 ตัว)");
+          if(v) api("/api/users/"+encodeURIComponent(pw), {method:"PUT", body:{password:v}})
+            .then(function(){ msg("ตั้งรหัสผ่านใหม่ให้ "+pw+" แล้ว"); }).catch(function(er){ msg(er.message); });
+        }else if(del){
+          if(confirm("ลบผู้ใช้ "+del+" ?"))
+            api("/api/users/"+encodeURIComponent(del), {method:"DELETE"})
+              .then(openUsers).catch(function(er){ msg(er.message); });
+        }
+      });
+      drawer.querySelector("#u-close").addEventListener("click", closeDrawer);
+      drawer.querySelector("#u-add").addEventListener("click", function(){
+        api("/api/users", {method:"POST", body:{
+          username: drawer.querySelector("#u-user").value,
+          name: drawer.querySelector("#u-name").value,
+          role: drawer.querySelector("#u-role").value,
+          password: drawer.querySelector("#u-pw").value
+        }}).then(openUsers).catch(function(er){ msg(er.message); });
+      });
+    }).catch(function(){});
+  }
+
+  document.getElementById("btn-users").addEventListener("click", openUsers);
+  document.getElementById("btn-pw").addEventListener("click", openPassword);
+  document.getElementById("btn-logout").addEventListener("click", function(){
+    api("/api/logout", {method:"POST"}).then(function(){ location.href="/login.html"; });
+  });
+})();
+</script>
+
+</body>
+</html>

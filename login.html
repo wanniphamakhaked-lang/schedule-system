@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>เข้าสู่ระบบ · ระบบตารางงานและการใช้รถส่วนกลาง</title>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bai+Jamjuree:wght@600;700&family=IBM+Plex+Sans+Thai:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --paper:#fbeff5; --surface:#ffffff; --ink:#2b2140; --muted:#87799c;
+    --line:#f0dde8; --surface-2:#fdf5f9; --accent:#e8407f; --accent-ink:#c22a66;
+    --grad:linear-gradient(135deg,#f2559a 0%,#e0357f 100%);
+    --blocked:#ef4b6b;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --paper:#161029; --surface:#1e1734; --surface-2:#261e40; --ink:#f1eafa;
+      --muted:#a99cc4; --line:#382c58; --accent:#ff5f9e; --accent-ink:#ffa9c9;
+      --grad:linear-gradient(135deg,#ff6ba6 0%,#e8407f 100%); --blocked:#ff7a8f;
+    }
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; min-height:100vh; background:var(--paper); color:var(--ink);
+    font-family:"IBM Plex Sans Thai","Noto Sans Thai",system-ui,sans-serif;
+    display:flex; align-items:center; justify-content:center; padding:24px;
+  }
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    box-shadow:0 1px 2px rgba(72,32,58,.05), 0 18px 40px -26px rgba(120,40,90,.5);
+    width:min(400px,100%); padding:28px;
+  }
+  h1{font-family:"Bai Jamjuree","IBM Plex Sans Thai",sans-serif; font-size:21px; margin:0 0 4px; line-height:1.3}
+  p.sub{margin:0 0 20px; color:var(--muted); font-size:13.5px}
+  label{display:block; font-size:12px; font-weight:600; color:var(--muted); margin-bottom:5px}
+  input{
+    width:100%; font-family:inherit; font-size:15px; color:var(--ink); background:var(--surface-2);
+    border:1px solid var(--line); border-radius:10px; padding:10px 12px; margin-bottom:14px;
+  }
+  input:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
+  button{
+    width:100%; font-family:inherit; font-size:15px; font-weight:600; color:#fff;
+    background:var(--grad); border:none; border-radius:10px; padding:11px; cursor:pointer;
+  }
+  button:hover{filter:brightness(1.06)}
+  .err{color:var(--blocked); font-size:13px; min-height:1.2em; margin:10px 0 0}
+  .hint{margin-top:18px; padding-top:14px; border-top:1px solid var(--line); color:var(--muted); font-size:12.5px}
+</style>
+</head>
+<body>
+  <form class="card" id="form">
+    <h1>ระบบตารางงานและการใช้รถส่วนกลาง</h1>
+    <p class="sub">กรุณาเข้าสู่ระบบด้วยบัญชีที่ผู้ดูแลระบบออกให้</p>
+
+    <label for="u">ชื่อผู้ใช้</label>
+    <input id="u" name="username" autocomplete="username" autofocus required>
+
+    <label for="p">รหัสผ่าน</label>
+    <input id="p" name="password" type="password" autocomplete="current-password" required>
+
+    <button type="submit">เข้าสู่ระบบ</button>
+    <p class="err" id="err"></p>
+
+    <p class="hint">เข้าระบบครั้งแรกใช้บัญชี <b>admin</b> ตามที่ตั้งไว้ตอนติดตั้ง แล้วเปลี่ยนรหัสผ่านทันที</p>
+  </form>
+
+<script>
+document.getElementById("form").addEventListener("submit", function(e){
+  e.preventDefault();
+  var err = document.getElementById("err");
+  err.textContent = "";
+  fetch("/api/login", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    credentials: "same-origin",
+    body: JSON.stringify({
+      username: document.getElementById("u").value,
+      password: document.getElementById("p").value
+    })
+  }).then(function(r){ return r.json().then(function(j){ return {ok:r.ok, j:j}; }); })
+    .then(function(res){
+      if(!res.ok) throw new Error(res.j.error || "เข้าสู่ระบบไม่สำเร็จ");
+      location.href = "/";
+    })
+    .catch(function(e2){ err.textContent = e2.message; });
+});
+</script>
+</body>
+</html>

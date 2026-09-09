@@ -1,0 +1,14 @@
+{
+  "name": "office-schedule-system",
+  "version": "1.0.0",
+  "description": "ระบบตารางงานทีม / ตารางงานผู้อำนวยการ / ตารางการใช้รถส่วนกลาง",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "reset-admin": "node server.js --reset-admin"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
+  },
+  "engines": { "node": ">=18" }
+}
